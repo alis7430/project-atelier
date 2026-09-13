@@ -1,0 +1,17 @@
+{
+  "name": "com.urdev.game-framework",
+  "version": "0.1.0",
+  "displayName": "UR Dev Game Framework",
+  "description": "Reusable Unity game base framework.",
+  "unity": "2022.3",
+  "author": {
+    "name": "urdev"
+  },
+  "type": "library",
+  "keywords": [
+    "framework",
+    "gameplay",
+    "runtime"
+  ],
+  "dependencies": {}
+}
