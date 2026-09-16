@@ -1,53 +1,35 @@
-using UnityEngine;
 using System.Collections.Generic;
-using URDev.GameFramework;
 
+[System.Serializable]
 public class Node
 {
-    public readonly NodeType nodeType = NodeType.None;
-    public readonly Vector2Int position = Vector2Int.zero;
-    public readonly List<Vector2Int> prevNodes = new List<Vector2Int>();
-    public readonly List<Vector2Int> nextNodes = new List<Vector2Int>();
-    public readonly string nodeName = string.Empty;
+    public int Id { get; private set; }
 
-    public Node(NodeType type, Vector2Int pos, string name ="")
+    public int Layer { get; private set; }      // 맵의 몇층인지
+    public int Index { get; private set; }      // Layer에서 몇번째 노드인지
+    
+    public NodeType nodeType { get; private set; }
+
+    public List<int> NextNodeIds { get; private set; } = new List<int>();
+
+    // for editor
+    public List<int> PrevNodeIds { get; private set; } = new List<int>();
+    
+    public Node(NodeType type, int id, int layer, int index)
     {
         nodeType = type;
-        position = pos;
-        nodeName = name;
+        Id = id;
+        Layer = layer;
+        Index = index;
     }
 
-    public void AddPrevNode(Vector2Int pos)
+    public void AddNext(int nodeId)
     {
-        if (prevNodes.Contains(pos) == false)
-            prevNodes.Add(pos);
+        NextNodeIds.Add(nodeId);
     }
 
-    public void AddNextNode(Vector2Int pos)
+    public void AddPrev(int nodeId)
     {
-        if (nextNodes.Contains(pos) == false)
-            nextNodes.Add(pos);
-    }
-
-    public void RemovePrevNode(Vector2Int pos)
-    {
-        if (prevNodes.Contains(pos))
-            prevNodes.Remove(pos);
-    }
-
-    public void RemoveNextNode(Vector2Int pos)
-    {
-        if (nextNodes.Contains(pos))
-            nextNodes.Remove(pos);
-    }
-
-    public bool IsConnectedTo(Vector2Int pos)
-    {
-        return prevNodes.Contains(pos) || nextNodes.Contains(pos);
-    }
-
-    public bool HasNoConnections()
-    {
-        return prevNodes.Count == 0 && nextNodes.Count == 0;
+        PrevNodeIds.Add(nodeId);
     }
 }
