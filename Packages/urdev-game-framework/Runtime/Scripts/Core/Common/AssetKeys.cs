@@ -5,6 +5,7 @@ namespace URDev.GameFramework
         public static string DataRoot = "Data";
         public static string PrefabRoot = "Prefabs";
         public static string SoundRoot = "Sounds";
+        public static string SceneRoot = "_Projects/Scenes";
 
         public static class Prefabs
         {

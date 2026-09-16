@@ -20,17 +20,5 @@ namespace URDev.GameFramework
             Press,
             Click
         }
-
-        public enum NodeType
-        {
-            None = -1,
-            Start,
-            Battle,
-            Elite,
-            Shop,
-            Rest,
-            Event,
-            End
-        }
     }
 }

@@ -12,7 +12,7 @@ namespace URDev.GameFramework
             Init();
         }
 
-        // call by Start
+        // call by Awake
         protected virtual void Init()
         {
             // check EventSystem
