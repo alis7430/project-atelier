@@ -20,4 +20,10 @@ public class MapConfigSO : ScriptableObject
 
     // The distance between layers in the map, used for positioning layers in the map
     public float LayerDistance;
+    
+    public IntRange prevBossNodeCount;
+    public IntRange nextStartNodeCount;
+
+    public int extraPaths;
+    public List<MapLayer> layers;
 }

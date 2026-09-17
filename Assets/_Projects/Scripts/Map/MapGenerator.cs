@@ -22,7 +22,7 @@ public class MapGenerator
         return new Map();
     }
 
-    private void GeneratePath()
+    private void GeneratePaths()
     {
         
     }

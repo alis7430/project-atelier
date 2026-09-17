@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1ff929fe51b191e46bcd4dfc7b1b7af8, type: 3}
-  m_Name: EnemyNodeSO
+  m_Name: StoreNode
   m_EditorClassIdentifier: Assembly-CSharp::MapNodeSO
-  sprite: {fileID: 1019859777, guid: 080cb6d98b00c2645b2c41df5f69bc78, type: 3}
-  nodeType: 1
+  SpriteIcon: {fileID: 21300000, guid: e528ad2660cc803479f32f07f9d3ab52, type: 3}
+  NodeType: 5

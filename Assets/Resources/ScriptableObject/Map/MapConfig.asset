@@ -1,0 +1,57 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 05791253b2c927443a234625173ec0bd, type: 3}
+  m_Name: MapConfig
+  m_EditorClassIdentifier: Assembly-CSharp::MapConfigSO
+  MapNodeSOList:
+  - {fileID: 11400000, guid: 2162b818c86f1de4696799476b6fe208, type: 2}
+  - {fileID: 11400000, guid: b66f213880d268b4f93deb1510cb94f1, type: 2}
+  - {fileID: 11400000, guid: a28b54c1c73951f45804b2c74e476679, type: 2}
+  - {fileID: 11400000, guid: e776af5014b3fd44f86bbd9a96e999d3, type: 2}
+  - {fileID: 11400000, guid: 8f05bd4a007fb7c4db10961d14f824af, type: 2}
+  - {fileID: 11400000, guid: ff9d6b421f9c55c43a0eb3a733582b1d, type: 2}
+  - {fileID: 11400000, guid: 0a66fcc10aa5b384cb6f0b8e8ef52197, type: 2}
+  - {fileID: 11400000, guid: a822d70c1987c0b4e87f0b2efd7c2700, type: 2}
+  RandomNodeTypes: 010000000200000004000000050000000600000007000000
+  LayerDistance: 200
+  prevBossNodeCount:
+    Min: 1
+    Max: 2
+  nextStartNodeCount:
+    Min: 2
+    Max: 3
+  extraPaths: 0
+  layers:
+  - NodeType: 0
+    NodeDistance: 0
+    randomNodeValue: 0
+  - NodeType: 1
+    NodeDistance: 0
+    randomNodeValue: 0
+  - NodeType: 7
+    NodeDistance: 0
+    randomNodeValue: 0
+  - NodeType: 5
+    NodeDistance: 0
+    randomNodeValue: 0
+  - NodeType: 4
+    NodeDistance: 0
+    randomNodeValue: 0
+  - NodeType: 2
+    NodeDistance: 0
+    randomNodeValue: 0
+  - NodeType: 6
+    NodeDistance: 0
+    randomNodeValue: 0
+  - NodeType: 6
+    NodeDistance: 0
+    randomNodeValue: 0

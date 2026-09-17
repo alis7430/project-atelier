@@ -1,6 +1,7 @@
 using UnityEngine;
 
-public class MapLayerSO : ScriptableObject
+[System.Serializable]
+public class MapLayer
 {
     [Tooltip("The type of node this layer represents as default")]
     public NodeType NodeType;

@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1ff929fe51b191e46bcd4dfc7b1b7af8, type: 3}
-  m_Name: TreasureNodeSO
+  m_Name: EventNode
   m_EditorClassIdentifier: Assembly-CSharp::MapNodeSO
-  sprite: {fileID: -214298916, guid: 080cb6d98b00c2645b2c41df5f69bc78, type: 3}
-  nodeType: 4
+  SpriteIcon: {fileID: 21300000, guid: 1a576e07510a6714a85dc81fb383ad11, type: 3}
+  NodeType: 7
