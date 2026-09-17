@@ -1,11 +1,29 @@
 using System.Collections.Generic;
-
+using Unity.Collections.LowLevel.Unsafe;
+using UnityEngine;
 public class MapGenerator
 {
-    private readonly MapConfig mapConfig;
+    private readonly MapConfigSO _mapConfig;
 
-    public MapGenerator(MapConfig config)
+    public MapGenerator(MapConfigSO config)
     {
-        mapConfig = config;
+        _mapConfig = config;
+    }
+
+    // Implementation for generating the map
+    public Map GetMap()
+    {
+        if(_mapConfig == null)
+        {
+            Debug.LogError("Cannot generate map. MapConfigSO is null.");
+            return null;
+        }
+        
+        return new Map();
+    }
+
+    private void GeneratePath()
+    {
+        
     }
 }

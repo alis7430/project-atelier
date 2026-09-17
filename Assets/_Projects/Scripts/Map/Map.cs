@@ -7,5 +7,5 @@ public class Map : MonoBehaviour
     public static Color ColorVisited = Color.white;
     public static Color ColorVisitable = Color.yellow;
 
-    public List<Node> nodes;
+    public List<Node> Nodes;
 }

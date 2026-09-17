@@ -11,43 +11,43 @@ public enum MapNodeStates
 // Node.cs => data, MapNode.cs => Intraction
 public class MapNode : MonoBehaviour
 {
-    public Image image;
-    public MapNodeStates state;
+    public Image Icon;
+    public MapNodeStates State;
     public Node Node{ get; private set; }
     public MapNodeSO NodeSO { get; private set; }
 
     public void SetData(Node node, MapNodeSO mapNodeSO)
     {
-        Node = node;
+        this.Node = node;
         NodeSO = mapNodeSO;
         SetData();
     }
 
     public void SetState(MapNodeStates newState)
     {
-        state = newState;
-        switch(state)
+        State = newState;
+        switch(State)
         {
             case MapNodeStates.Locked:
-                image.color = Map.ColorLocked;
+                Icon.color = Map.ColorLocked;
                 break;
             case MapNodeStates.Visited:
-                image.color = Map.ColorVisited;
+                Icon.color = Map.ColorVisited;
                 break;
             case MapNodeStates.Visitable:
-                image.color = Map.ColorVisitable;
+                Icon.color = Map.ColorVisitable;
                 break;
             default:
-                image.color = Color.black;
+                Icon.color = Color.black;
                 break;
         }
     }
 
     private void SetData()
     {
-        if(NodeSO != null && image != null)
+        if(NodeSO != null && Icon != null)
         {
-            image.sprite = NodeSO.sprite;
+            Icon.sprite = NodeSO.SpriteIcon;
         }
 
     }

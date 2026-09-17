@@ -2,12 +2,13 @@ using UnityEngine;
 using System.Collections.Generic;
 
 [CreateAssetMenu(fileName = "MapConfig", menuName = "ScriptableObjects/MapConfig", order = 1)]
-public class MapConfig : ScriptableObject
+public class MapConfigSO : ScriptableObject
 {
-    public List<MapNodeSO> mapNodeSOList = new List<MapNodeSO>();
+    // node type to sprite mapping, used for rendering the nodes in the map
+    public List<MapNodeSO> MapNodeSOList = new List<MapNodeSO>();
     
     // except Start and Boss nodes, the rest of the node types can be randomly generated
-    public List<NodeType> randomNodeTypes = new List<NodeType>()
+    public List<NodeType> RandomNodeTypes = new List<NodeType>()
     {
         NodeType.Enemy,
         NodeType.EliteEnemy,
@@ -16,4 +17,7 @@ public class MapConfig : ScriptableObject
         NodeType.Rest,
         NodeType.Event,
     };
+
+    // The distance between layers in the map, used for positioning layers in the map
+    public float LayerDistance;
 }

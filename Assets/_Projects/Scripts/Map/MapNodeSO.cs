@@ -21,6 +21,6 @@ public enum NodeType
 [CreateAssetMenu(fileName = "MapNodeSO", menuName = "ScriptableObjects/MapNodeSO", order = 0)]
 public class MapNodeSO : ScriptableObject
 {
-    public Sprite sprite;
-    public NodeType nodeType;
+    public Sprite SpriteIcon;
+    public NodeType NodeType;
 }
