@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 public class MapGenerator
 {
