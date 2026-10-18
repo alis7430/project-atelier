@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 /// <summary>
 /// IList Shuffling extension
-/// Using Fisher–Yates Shuffle
+/// Using Fisher–Yates Shuffle, Time complexity is O(N^2)
 /// </summary>
 public static class ShufflingExtension
 {

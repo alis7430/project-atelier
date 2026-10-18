@@ -25,11 +25,17 @@ public class Node
 
     public void AddNext(int nodeId)
     {
+        if(NextNodeIds.Contains(nodeId))
+            return;
+
         NextNodeIds.Add(nodeId);
     }
 
     public void AddPrev(int nodeId)
     {
+        if(PrevNodeIds.Contains(nodeId))
+            return;
+            
         PrevNodeIds.Add(nodeId);
     }
 }
