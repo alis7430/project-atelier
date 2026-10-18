@@ -1,6 +1,6 @@
 // Implement System.Random
 // C# system random을 사용한 난수 생성기
-public class SystemRng : IRng
+public class SystemRng : IRandom
 {
     private readonly System.Random _random;
 

@@ -13,8 +13,8 @@ public class Map : MonoBehaviour
 
     public Node GetNode(int layer, int index)
     {
-        if(layer < 0 || layer > _nodes.Count) return null;
-        if(index < 0 || index > _nodes[layer].Count) return null;
+        if(layer < 0 || layer >= _nodes.Count) return null;
+        if(index < 0 || index >= _nodes[layer].Count) return null;
 
         return _nodes[layer][index];
     }
