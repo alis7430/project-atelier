@@ -1,3 +1,4 @@
+using UnityEngine;
 using System.Collections.Generic;
 
 [System.Serializable]
@@ -9,11 +10,10 @@ public class Node
     public int Index { get; private set; }      // Layer에서 몇번째 노드인지
     
     public NodeType NodeType { get; private set; }
+    public Vector2 position { get; private set; }
 
     public List<int> NextNodeIds { get; private set; } = new List<int>();
-
-    // for editor
-    public List<int> PrevNodeIds { get; private set; } = new List<int>();
+    public List<int> PrevNodeIds { get; private set; } = new List<int>(); // for editor
     
     public Node(NodeType type, int id, int layer, int index)
     {
@@ -37,5 +37,20 @@ public class Node
             return;
             
         PrevNodeIds.Add(nodeId);
+    }
+
+    public void RemoveNext(int nodeId)
+    {
+        NextNodeIds.Remove(nodeId);
+    }
+
+    public void RemovePrev(int nodeId)
+    {
+        PrevNodeIds.Remove(nodeId);
+    }
+
+    public void SetPosition(Vector2 pos)
+    {
+        position = pos;
     }
 }

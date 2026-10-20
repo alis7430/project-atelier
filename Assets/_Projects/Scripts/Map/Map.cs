@@ -8,8 +8,18 @@ public class Map : MonoBehaviour
     public static Color ColorVisited = Color.white;
     public static Color ColorVisitable = Color.yellow;
 
+    public readonly string ConfigName;
+    public readonly string BossNodeName;
+
     // _nodes[layer][index]
     private readonly List<List<Node>> _nodes = new List<List<Node>>();
+
+    public Map(List<List<Node>> nodes, string configName)
+    {
+        _nodes = nodes;
+        ConfigName = configName;
+        //BossNodeName = GetBossNode().name; // 이름 설정하는 법 고민중
+    }
 
     public Node GetNode(int layer, int index)
     {
