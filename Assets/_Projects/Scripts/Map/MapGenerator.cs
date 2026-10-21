@@ -41,7 +41,11 @@ public class MapGenerator
         RandomizeNodePositions();
         RemoveCrossConnections();
         
-        return new Map(_nodes, _config.name);
+        List<Node> availableNodes = _nodes.SelectMany(layer => layer)
+                    .Where(node => node.NextNodeIds.Count > 0 || node.PrevNodeIds.Count > 0)
+                    .ToList();
+        
+        return new Map(availableNodes, _config.name);
     }
 
     private Node GetFinalNode()
@@ -223,7 +227,7 @@ public class MapGenerator
                 float x = randomX * layer.NodeApartDistance;
                 float y = randomY * _config.LayerDistance;
 
-                Vector2 offset = new Vector2(x, y) * layer.randomNodeValue;
+                Vector2 offset = new Vector2(x, y) * layer.randomizePosition;
                 node.SetPosition(node.position + offset);
             }
         }

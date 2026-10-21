@@ -17,15 +17,32 @@ namespace URDev.GameFramework
         public static void AddUIEvent(this GameObject go, Action<PointerEventData> action, Define.UIEvent type = Define.UIEvent.Click)
         {
             UI_EventHandler evt = go.AddMissingComponent<UI_EventHandler>();
+            RemoveUIEvent(go, action, type);
+
+            switch (type)
+            {
+                case Define.UIEvent.Click:
+                    evt.OnClickHandler += action;
+                    break;
+                case Define.UIEvent.Drag:
+                    evt.OnDragHandler += action;
+                    break;
+            }
+        }
+
+        public static void RemoveUIEvent(this GameObject go, Action<PointerEventData> action, Define.UIEvent type = Define.UIEvent.Click)
+        {
+            if (!go.TryGetComponent(out UI_EventHandler evt))
+                return;
+
             switch (type)
             {
                 case Define.UIEvent.Click:
                     evt.OnClickHandler -= action;
-                    evt.OnClickHandler += action;
                     break;
+
                 case Define.UIEvent.Drag:
                     evt.OnDragHandler -= action;
-                    evt.OnDragHandler += action;
                     break;
             }
         }

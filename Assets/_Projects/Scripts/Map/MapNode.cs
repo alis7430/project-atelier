@@ -11,44 +11,73 @@ public enum MapNodeStates
 // Node.cs => data, MapNode.cs => Intraction
 public class MapNode : MonoBehaviour
 {
-    public Image Icon;
-    public MapNodeStates State;
+    [SerializeField] private Image _icon;
+    [SerializeField] private Button _button;
+
     public Node Node{ get; private set; }
     public MapNodeSO NodeSO { get; private set; }
 
-    public void SetData(Node node, MapNodeSO mapNodeSO)
+    public MapNodeStates State { get; private set; }
+
+    public event System.Action<MapNode> OnClicked;
+
+    private void Awake()
     {
-        this.Node = node;
-        NodeSO = mapNodeSO;
-        SetData();
+        if(_button != null)
+            _button.onClick.AddListener(OnClick);
     }
 
-    public void SetState(MapNodeStates newState)
+    public void SetData(Node node, MapNodeSO mapNodeSO)
+    {
+        Node = node;
+        NodeSO = mapNodeSO;
+        
+        if(NodeSO != null && _icon != null)
+        {
+            _icon.sprite = NodeSO.SpriteIcon;
+        }
+
+    }
+
+    public void SetState(MapNodeStates newState, 
+                        Color? lockedColor = null, 
+                        Color? visitedColor = null, 
+                        Color? visitableColor = null)
     {
         State = newState;
         switch(State)
         {
             case MapNodeStates.Locked:
-                Icon.color = Map.ColorLocked;
+                _icon.color = lockedColor ?? Color.gray;
                 break;
             case MapNodeStates.Visited:
-                Icon.color = Map.ColorVisited;
+                _icon.color = visitedColor ?? Color.white;
                 break;
             case MapNodeStates.Visitable:
-                Icon.color = Map.ColorVisitable;
+                _icon.color = visitableColor ?? Color.yellow;
                 break;
             default:
-                Icon.color = Color.black;
+                _icon.color = Color.black;
                 break;
+        }
+
+        if (_button != null)
+        {
+            _button.interactable = State == MapNodeStates.Visitable;
         }
     }
 
-    private void SetData()
+    private void OnClick()
     {
-        if(NodeSO != null && Icon != null)
-        {
-            Icon.sprite = NodeSO.SpriteIcon;
-        }
+        if(State != MapNodeStates.Visitable) return;
+        if(Node == null) return;
 
+        OnClicked?.Invoke(this);
+    }
+
+    private void OnDestroy()
+    {
+        if(_button != null)
+            _button.onClick.RemoveListener(OnClick);
     }
 }
