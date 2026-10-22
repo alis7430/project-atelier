@@ -14,11 +14,11 @@
 자체 제작 프레임워크:
 - 실제 패키지 경로: Packages/urdev-game-framework/.
 - 패키지 ID/버전: com.urdev.game-framework / 0.1.0.
-- 승인된 통일 명칭: URDev.GameFrameWork.
+- 승인된 통일 명칭: URDev.GameFramework (2026-10-22 개발자 정정).
 - 현재 asmdef 이름/rootNamespace: URDev.GameFramework.
 - 대부분의 현재 런타임 타입: URDev.GameFramework.
-- Runtime/Framework.cs: UR.GameFramework.
-- 이름 이전은 미완료이며 문서 갱신으로 코드가 변경되지는 않는다.
+- Runtime/Framework.cs: URDev.GameFramework (개발자 변경 후 소스 확인).
+- 승인 명칭과 확인한 asmdef/Framework.cs 식별자가 일치한다. 이번 갱신은 문서만 변경한다.
 
 근거:
 - Packages/urdev-game-framework/Runtime/URDev.GameFramework.asmdef.

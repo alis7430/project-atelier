@@ -84,7 +84,7 @@ The developer described using ChatGPT on the web to explain Project Atelier's co
 - 시드·맵 진행은 씬 간 유지하며 향후 RunManager가 한 번의 런을 관리한다.
 - 맵을 풀링하여 진행 중 현재 지도를 다시 열 수 있게 한다.
 - 개인 Memo.md는 참고용이며 확정 계획으로 취급하지 않는다.
-- 자체 프레임워크 통일 명칭은 URDev.GameFrameWork다.
+- 당시 프레임워크 명칭은 URDev.GameFrameWork로 기록했다. 같은 날 후속 정정으로 대체되었으며 아래 기록과 ADR-005를 따른다.
 - 이번 문서 반영을 요청했고 향후 필요한 AI Docs 수정은 먼저 제안하도록 했다.
 
 ### Decisions
@@ -96,7 +96,7 @@ The developer described using ChatGPT on the web to explain Project Atelier's co
 - ADR-002: 맵 필수 규칙.
 - ADR-003: 런 상태의 씬 간 유지와 향후 RunManager.
 - ADR-004: 맵 풀링과 재열기.
-- ADR-005: URDev.GameFrameWork 명칭 통일.
+- ADR-005: 프레임워크 명칭 통일 (최신 표기는 아래 후속 정정 참조).
 - 세부 API, 풀 단위, 최종 연결 위치를 추가로 승인받았다고 가정하지 않는다.
 
 ### Documentation changes
@@ -123,8 +123,17 @@ Unity 실행, 빌드, 테스트, 프로파일링을 수행하지 않았다.
 - 연결 책임 이전 시점과 위치.
 - RunManager 소유권·수명·RuntimeManager 관계.
 - 풀링 단위와 표시 객체 수명.
-- 실제 프레임워크 코드의 명칭 이전.
+- 당시 후속 항목인 프레임워크 명칭 이전은 아래 정정 및 소스 확인으로 해소되었다.
 - 향후 문서 갱신 필요 시 제안하고 명시적 반영 요청에 따라 수행.
+
+---
+
+## 2026-10-22 — 프레임워크 명칭 정정 및 소스 확인
+
+- **개발자 결정:** 통일 명칭은 `URDev.GameFramework`다. 이전 `URDev.GameFrameWork` 표기를 대체한다.
+- **소스 확인:** 개발자가 변경한 `Packages/urdev-game-framework/Runtime/Framework.cs`의 namespace와 `Runtime/URDev.GameFramework.asmdef`의 name/rootNamespace가 모두 `URDev.GameFramework`다.
+- **문서 반영:** AGENTS.md, Docs/AI, 관련 로컬 스킬 지침과 패키지 README/작성 가이드의 명칭을 정정했다. ADR-005를 갱신했으며 명칭 이전을 미완료로 취급하지 않는다.
+- **범위:** 문서만 수정했다. 패키지 ID 변경, 생산 코드 변경, Unity 실행·빌드·테스트는 수행하지 않았다.
 
 ---
 

@@ -74,11 +74,12 @@ https://github.com/alis7430/slay-the-spire-map-in-unity
 
 게임 코드에는 별도 asmdef가 없으며 전역 네임스페이스를 사용한다.
 
-프레임워크의 승인된 통일 명칭은 `URDev.GameFrameWork`다.
-개발자 자체 제작 프레임워크이며 현재 코드의 어셈블리·주 네임스페이스는
-`URDev.GameFramework`, Framework.cs는 `UR.GameFramework`다.
-문서의 목표 명칭과 기존 코드 식별자를 구분한다.
-이번 문서 갱신에서 코드·asmdef·패키지 ID를 변경하지 않는다.
+프레임워크의 승인된 통일 명칭은 `URDev.GameFramework`다.
+2026-10-22 개발자가 이전 대소문자 표기를 정정했다.
+개발자 자체 제작 프레임워크이며 현재 asmdef 이름/rootNamespace와
+Framework.cs의 네임스페이스도 `URDev.GameFramework`로 확인했다.
+Framework.cs는 개발자가 변경했으며, 이번 갱신에서는 관련 문서만 수정한다.
+패키지 ID는 `com.urdev.game-framework`로 유지한다.
 
 ## 5. 확인된 구현과 승인된 방향
 

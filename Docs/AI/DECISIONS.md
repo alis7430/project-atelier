@@ -128,15 +128,16 @@ The initial context contained no confirmed gameplay ADRs. The decisions below we
 
 - **Date:** 2026-10-22.
 - **Status:** Accepted.
-- **Decision:** 자체 제작 프레임워크의 통일 명칭은 `URDev.GameFrameWork`다.
-  대소문자는 개발자가 제시한 표기를 따른다.
-- **Rationale:** 개발자가 자신의 프레임워크 명칭을 지정했다.
-- **Implementation:** 현재 asmdef/주 네임스페이스는 `URDev.GameFramework`,
-  Framework.cs의 네임스페이스는 `UR.GameFramework`다.
-- **Consequences:** 목표 명칭과 실제 소스 심볼을 분리해 인용한다.
+- **Decision:** 자체 제작 프레임워크의 통일 명칭은 `URDev.GameFramework`다.
+- **History:** 2026-10-22 후속 대화에서 개발자가 이전 `URDev.GameFrameWork`
+  표기를 위 명칭으로 정정하고 Framework.cs 변경 사실과 문서 반영을 요청했다.
+- **Rationale:** 개발자가 확정한 최신 표기를 따른다.
+- **Implementation:** asmdef 이름/rootNamespace와 개발자가 변경한 Framework.cs의
+  네임스페이스가 `URDev.GameFramework`로 일치함을 소스에서 확인했다.
+- **Consequences:** 명칭 이전을 미완료 작업으로 기록하지 않는다.
   이번 갱신은 문서만 변경하며 코드·asmdef·직렬화 자산을 이름 변경하지 않는다.
-- **Open details:** 코드 이름 이전의 범위·시점과 호환성 검토는 개발자가 정한다.
-  package ID 변경·외부 배포·지원 버전 확대는 이번에 결정하지 않았다.
+- **Scope:** package ID는 `com.urdev.game-framework`로 유지한다.
+  외부 배포·지원 버전 확대는 이번에 결정하지 않았다.
 - **Affected files:** Packages/urdev-game-framework/Runtime/URDev.GameFramework.asmdef,
   Packages/urdev-game-framework/Runtime/Framework.cs,
   Packages/urdev-game-framework/Runtime/Scripts/,

@@ -30,7 +30,8 @@ https://github.com/alis7430/slay-the-spire-map-in-unity
 - [계획] 맵 풀링을 통해 진행 중 현재 지도를 다시 열 수 있도록 구현.
 - [확정] MapConfig.asset 값은 임시이며 테스트 단계에서 개발자가 수정.
 - [확정] 개인 Memo.md는 참고 자료일 뿐 현재 계획의 권위 있는 근거가 아님.
-- [확정] 자체 프레임워크 통일 명칭은 URDev.GameFrameWork.
+- [확정] 자체 프레임워크 통일 명칭은 URDev.GameFramework.
+- [소스 확인] 개발자가 변경한 Framework.cs의 네임스페이스와 asmdef 이름/rootNamespace가 URDev.GameFramework로 일치함.
 
 ## 3. 현재 구현 상태
 
@@ -66,7 +67,7 @@ https://github.com/alis7430/slay-the-spire-map-in-unity
 - SceneManagerEX.LoadScene은 Managers.Clear를 호출한다.
   RuntimeManager를 그대로 등록하면 Clear가 Seed/Random을 지우므로
   향후 RunManager의 런 수명과 씬 정리 정책을 구분해야 한다.
-- 프레임워크 코드 명칭 이전은 이번 문서 반영에 포함하지 않는다.
+- 프레임워크 명칭은 URDev.GameFramework로 확정되었으며, Framework.cs와 asmdef에서 일치한다. 명칭 이전을 미완료 작업으로 취급하지 않는다.
 
 ## 5. 다음 작업 순서
 
