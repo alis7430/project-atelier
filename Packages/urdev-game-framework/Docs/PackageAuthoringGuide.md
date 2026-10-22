@@ -23,7 +23,7 @@ Unity Package Manager는 이 폴더의 `package.json`을 읽어 패키지 이름
 기본 네임스페이스는 다음을 사용합니다.
 
 ```csharp
-namespace UR.GameFramework
+namespace URDev.GameFramework
 {
 }
 ```
@@ -31,15 +31,15 @@ namespace UR.GameFramework
 기능별 코드가 커지면 다음처럼 하위 네임스페이스를 사용합니다.
 
 ```csharp
-namespace UR.GameFramework.Core
+namespace URDev.GameFramework.Core
 {
 }
 
-namespace UR.GameFramework.Services
+namespace URDev.GameFramework.Services
 {
 }
 
-namespace UR.GameFramework.StateMachines
+namespace URDev.GameFramework.StateMachines
 {
 }
 ```

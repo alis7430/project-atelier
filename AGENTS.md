@@ -91,9 +91,9 @@ Verified or explicitly confirmed on 2026-10-22; re-check source before advising.
 ## Existing conventions and naming
 
 - Game scripts currently use the global namespace and have no game-specific asmdef.
-- The approved name for the developer's framework is URDev.GameFrameWork.
-- Current source actually uses URDev.GameFramework for its asmdef and most runtime namespaces, and UR.GameFramework in Framework.cs.
-- Quote existing symbols exactly when discussing source. Record the approved name as a target until the developer migrates code; do not silently rename production files or identifiers.
+- The approved name for the developer's framework is URDev.GameFramework (confirmed on 2026-10-22, replacing the earlier capitalization).
+- The asmdef name/rootNamespace and Framework.cs namespace are URDev.GameFramework, verified in source on 2026-10-22.
+- Quote existing symbols exactly when discussing source. Do not describe URDev.GameFramework as a pending naming migration or silently rename production files or identifiers.
 - The package ID remains com.urdev.game-framework unless separately changed by the developer.
 - Types/methods generally use PascalCase and private fields often use _camelCase; serialized names are mixed.
 - Respect neighboring code, existing public APIs and serialized field names. Do not recommend bulk renaming solely for consistency.

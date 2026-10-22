@@ -46,7 +46,7 @@ feature-design의 범위를 참고하되 세 스킬의 전체 절차를 반복�
 - 풀링된 표시 객체의 수명과 맵·시드·방문 상태의 수명을 분리한다.
   씬 간 상태 보존이 디스크 저장 요구를 뜻하지는 않는다.
 - `Packages/urdev-game-framework/Runtime/`의 실제 식별자를 확인한다.
-  목표 명칭 URDev.GameFrameWork를 기존 소스 심볼 대신 사용하지 않는다.
+  승인된 통일 명칭은 URDev.GameFramework이며, 명칭 이전을 미완료로 가정하지 않는다.
 - 개인 Memo.md와 외부 레퍼런스는 승인된 결정이 아니다.
   외부 소스를 비교했다면 실제 열어 본 URL·파일과 확인 범위를 밝힌다.
 

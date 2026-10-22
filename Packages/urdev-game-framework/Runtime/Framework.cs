@@ -1,4 +1,4 @@
-namespace UR.GameFramework
+namespace URDev.GameFramework
 {
     public static class Framework
     {

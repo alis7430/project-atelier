@@ -5,8 +5,8 @@ Script-only Unity game framework package.
 ## Package Identity
 
 - Package name: `com.urdev.game-framework`
-- Root namespace: `UR.GameFramework`
-- Runtime assembly: `UR.GameFramework`
+- Root namespace: `URDev.GameFramework`
+- Runtime assembly: `URDev.GameFramework`
 - Minimum Unity version: `2022.3`
 
 ## Structure
