@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -32,9 +33,9 @@ public class MapNode : MonoBehaviour
         Node = node;
         NodeSO = mapNodeSO;
         
-        if(NodeSO != null && _icon != null)
+        if(_icon != null)
         {
-            _icon.sprite = NodeSO.SpriteIcon;
+            _icon.sprite = NodeSO != null ? NodeSO.SpriteIcon : null;
         }
 
     }

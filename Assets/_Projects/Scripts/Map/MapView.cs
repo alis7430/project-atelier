@@ -25,10 +25,15 @@ public class MapView : MonoBehaviour
         
     [Header("Line Colors")]
     [SerializeField] private Color _lineLockedColor = Color.gray;
-    [SerializeField] private Color _lineActiveColor = Color.white;
+    [SerializeField] private Color _lineVisitedColor = Color.white;
+    [SerializeField] private Color _lineAvailableColor = Color.yellow;
 
     private readonly Dictionary<int, MapNode> _nodes = new();
     private readonly List<MapLine> _lines = new();
+
+    private Map _displayedMap;
+    private readonly HashSet<int> _visitedNodeIds = new();
+    private readonly HashSet<(int FromNodeId, int ToNodeId)> _visitedEdges = new();
 
     public event Action<MapNode> OnNodeClicked;
 
@@ -37,9 +42,15 @@ public class MapView : MonoBehaviour
         if (map == null || config == null)
             return;
 
-        // 1차적으로 제거 후 다시 생성, 이미 있으면 보여주기만 하는 방식으로 변경 가능
+        if (_content == null ||_nodeRoot == null || _lineRoot == null || _nodePrefab == null || _linePrefab == null)
+        {
+            Debug.LogError("MapView references are not assigned.", this);
+            return;
+        }
+
         Clear();
 
+        _displayedMap = map;
         var activeNodes = map.Nodes;
 
         if (activeNodes.Count == 0)
@@ -51,9 +62,7 @@ public class MapView : MonoBehaviour
         float minY = activeNodes.Min(n => n.position.y);
         float maxY = activeNodes.Max(n => n.position.y);
 
-        Vector2 origin = new Vector2(
-            (minX + maxX) * 0.5f,
-            minY);
+        Vector2 origin = new Vector2((minX + maxX) * 0.5f, minY);
 
         _content.sizeDelta = new Vector2(
             (maxX - minX) * _unitsToPixels + _padding * 2f,
@@ -72,16 +81,14 @@ public class MapView : MonoBehaviour
             nodeSOs.TryGetValue(node.NodeType, out MapNodeSO nodeSO);
 
             mapNode.SetData(node, nodeSO);
+            mapNode.SetState(MapNodeStates.Locked, _lockedColor, _visitedColor, _visitableColor);
 
-            RectTransform rect =
-                (RectTransform)mapNode.transform;
+            RectTransform rect = (RectTransform)mapNode.transform;
 
             rect.anchorMin = new Vector2(0.5f, 0f);
             rect.anchorMax = new Vector2(0.5f, 0f);
 
-            rect.anchoredPosition =
-                (node.position - origin) * _unitsToPixels
-                + new Vector2(0f, _padding);
+            rect.anchoredPosition = (node.position - origin) * _unitsToPixels + new Vector2(0f, _padding);
 
             mapNode.OnClicked += OnNodeClick;
 
@@ -111,12 +118,7 @@ public class MapView : MonoBehaviour
                     ((RectTransform)to.transform)
                     .anchoredPosition;
 
-                line.SetData(
-                    node.Id,
-                    nextId,
-                    fromPos,
-                    toPos,
-                    _lineThickness);
+                line.SetData(node.Id, nextId, fromPos, toPos, _lineThickness);
 
                 line.SetColor(_lineLockedColor);
                 _lines.Add(line);
@@ -128,14 +130,49 @@ public class MapView : MonoBehaviour
     {
         if (map == null)
             return;
+        
+        if (visitedNodeIds == null)
+            throw new ArgumentNullException(nameof(visitedNodeIds));
 
-        HashSet<int> visited = new(visitedNodeIds);
+        if (canVisit == null)
+            throw new ArgumentNullException(nameof(canVisit));
+        
+        if (!ReferenceEquals(_displayedMap, map))
+        {
+            Debug.LogWarning(
+                "Call ShowMap before refreshing a different map.",
+                this);
+
+            return;
+        }
+
+        _visitedNodeIds.Clear();
+        _visitedEdges.Clear();
+
+        for(int index = 0; index < visitedNodeIds.Count; index++)
+        {
+            int nodeId = visitedNodeIds[index];
+            _visitedNodeIds.Add(nodeId);
+
+            Node node = map.GetNode(nodeId);
+            if (node == null)
+                continue;
+
+            if(index > 0)
+            {
+                int prevNodeId = visitedNodeIds[index - 1];
+                _visitedEdges.Add((prevNodeId, nodeId));
+            }
+        }
 
         foreach (var node in map.Nodes)
         {
+            if (!_nodes.TryGetValue(node.Id, out MapNode mapNode))
+                continue;
+            
             MapNodeStates state;
 
-            if (visited.Contains(node.Id))
+            if (_visitedNodeIds.Contains(node.Id))
             {
                 state = MapNodeStates.Visited;
             }
@@ -149,11 +186,26 @@ public class MapView : MonoBehaviour
             }
 
             // Assuming you have a way to get the corresponding MapNode for each Node
-            MapNode mapNode = _nodes.GetValueOrDefault(node.Id);
-            if (mapNode != null)
-            {
-                mapNode.SetState(state, _lockedColor, _visitedColor, _visitableColor);
-            }
+            mapNode.SetState(state, _lockedColor, _visitedColor, _visitableColor);
+        }
+
+        int? currentNodeId = visitedNodeIds.Count > 0 ? visitedNodeIds[visitedNodeIds.Count - 1] : (int?)null;
+
+        foreach (MapLine line in _lines)
+        {
+            bool wasTraversed = _visitedEdges.Contains((line.FromNodeId, line.ToNodeId));
+
+            bool isAvailable =
+                currentNodeId.HasValue &&
+                line.FromNodeId == currentNodeId.Value &&
+                _nodes.TryGetValue(line.ToNodeId, out MapNode target) &&
+                target.State == MapNodeStates.Visitable;
+
+            Color color = wasTraversed ? _lineVisitedColor : isAvailable
+                    ? _lineAvailableColor
+                    : _lineLockedColor;
+
+            line.SetColor(color);
         }
     }
 
@@ -165,21 +217,46 @@ public class MapView : MonoBehaviour
                 continue;
 
             node.OnClicked -= OnNodeClick;
+            node.gameObject.SetActive(false);
             Destroy(node.gameObject);
         }
 
         foreach (MapLine line in _lines)
         {
-            if (line != null)
-                Destroy(line.gameObject);
+            if (line == null)
+                continue;
+
+            line.gameObject.SetActive(false);
+            Destroy(line.gameObject);
         }
 
         _nodes.Clear();
         _lines.Clear();
+        _visitedNodeIds.Clear();
+        _visitedEdges.Clear();
+
+        _displayedMap = null;
     }
 
     private void OnNodeClick(MapNode mapNode)
     {
+        if (mapNode == null || mapNode.Node == null)
+            return;
+
+        if (!_nodes.TryGetValue(mapNode.Node.Id, out MapNode currentView))
+        {
+            return;
+        }
+
+        if (currentView != mapNode)
+            return;
+
         OnNodeClicked?.Invoke(mapNode);
+    }
+
+    private void OnDestroy()
+    {
+        Clear();
+        OnNodeClicked = null;
     }
 }

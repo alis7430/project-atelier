@@ -9,6 +9,14 @@ public class MapLine : MonoBehaviour
     public int FromNodeId { get; private set; }
     public int ToNodeId { get; private set; }
 
+    private void Awake()
+    {
+        if (_image == null)
+            _image = GetComponent<Image>();
+
+        _image.raycastTarget = false;
+    }
+    
     public void SetData(int fromId, int toId, Vector2 from, Vector2 to, float thickness)
     {
         FromNodeId = fromId;
