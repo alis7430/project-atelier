@@ -59,12 +59,12 @@ Reply in Korean, using polite language, unless explicitly asked otherwise. Keep 
 
 ## Confirmed project context
 
-Verified or explicitly confirmed on 2026-10-22; re-check source before advising.
+Product intent was confirmed on 2026-10-22; implementation was re-checked on 2026-10-24 (81014b0). Re-check source before advising.
 
 - Project Atelier is a deckbuilding roguelike prototype referencing Slay the Spire 2.
 - The developer collaborates with one illustrator; the overall game flow follows the reference closely, but unspecified details are not requirements.
-- Current focus: write MapView and connect it through MapTestScene for developer-run Unity Editor checks.
-- The map generation foundation exists. Scene wiring is intentionally not done yet; do not present this development stage as a regression.
+- Current focus: develop and validate the map screen through MapTestScene with developer-run Unity Editor checks.
+- MapView layout, node/edge states, MapTestScene generation/display/click wiring, and saved scene/prefab references exist. Earlier unwired-scene notes describe the pre-20b475d stage. Runtime validation remains unconfirmed.
 - MapTestScene owns initial integration; its later replacement location is undecided.
 - Required map rules: final Boss Enemy, a route from every starting node to the destination, and no dead ends.
 - Seed and map progress must survive scene transitions. RunManager is a future system for one run, not an existing implementation.

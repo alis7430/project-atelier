@@ -137,6 +137,74 @@ Unity 실행, 빌드, 테스트, 프로파일링을 수행하지 않았다.
 
 ---
 
+## 2026-10-24 — macOS 컨텍스트 복원과 맵 구현 진전 기록
+
+### Goal
+
+Git으로 보존된 문서와 실제 소스·자산을 대조하여 Windows에서 이어진 개발 맥락을 복원한다.
+복원 보고 후 개발자가 확인된 진행 상황의 문서 반영을 명시적으로 요청했다.
+이전 대화 원문을 기억하거나 접근했다고 가정하지 않는다.
+
+### Source reviewed
+
+- AGENTS.md, Docs/AI의 5개 문서, 로컬 architecture-review/code-review/feature-design 지침.
+- Assets/_Projects/Scripts의 맵·난수·RuntimeManager·유틸리티 코드.
+- 프레임워크 README/CHANGELOG/작성 가이드, asmdef 및 핵심 서비스·생명주기 코드.
+- MapTestScene.unity, MapNode/MapLine 및 EventSystem 프리팹,
+  MapConfig와 MapNodeSO 자산 및 관련 .meta GUID/fileID.
+- Unity 버전, 패키지 선언, 빌드 씬·입력 설정, 관련 Git 이력. 소스 기준 HEAD: 81014b0.
+
+### Findings
+
+- AI 기준 문서의 마지막 커밋 d5a876b 이후 880f377에서 맵 프리팹과 Node 하위 자산이 추가되고,
+  20b475d에서 MapView 확장·MapTestScene 연결·MapConfig 필드 정합성이 반영되었다.
+- MapTestScene.Start는 씬의 _seed(저장값 99999)로 생성한 맵을 SetMap → ShowMap →
+  최초 RefreshStates 순으로 연결한다. 클릭 이벤트의 구독·해제, ID 전달과 방문 처리도 존재한다.
+- 저장된 씬에 Config/Manager/View 및 노드·선 프리팹 참조가 연결되어 있다.
+  초기 문서의 “씬 미연결”은 당시 상태이며 현재 상태로 사용하지 않는다.
+- MapView는 노드와 간선 상태 색상을 갱신하고 방문 노드/간선 HashSet을 재사용한다.
+  Clear는 구독 해제, 표시 객체 비활성화·파괴 및 컬렉션 정리를 수행한다.
+- MapConfig의 필드명은 현재 코드와 일치하고 마지막 레이어는 BossEnemy,
+  randomNodeValue=0이다. 이는 생성기의 모든 설정에 대한 Boss 강제나 경로 보장이 아니다.
+- 81014b0에서 연결된 노드만 반환하는 필터가 복원되었고 노드 아이콘 크기는 75에서 50으로
+  조정되었다. 필터 변경의 별도 설계 이유는 기록으로 확인하지 못했다.
+- RunManager, RuntimeManager 등록, 씬 간 진행 보존과 맵 풀링 연결은 발견하지 못했다.
+  교차 연결 제거 후 도달 가능성 검증·보정도 없다.
+
+### Decisions
+
+- 기존 AI 정책 및 ADR-001~005의 승인된 의도는 유지한다. 새 게임 아키텍처 결정은 없다.
+- 이번 요청은 파악한 진행 상황의 문서 반영을 허용한다. 생산 코드·자산·설정 변경이나
+  향후 문서 자동 수정의 포괄 승인은 아니다.
+
+### Documentation changes
+
+- CURRENT/PROJECT: 테스트 연결이 구현된 현황과 실행 검증의 한계를 반영했다.
+- ARCHITECTURE: 현재 호출·이벤트 흐름, 씬/프리팹 연결, 설정 정합성과 표시 상태를 갱신했다.
+- DECISIONS: 기존 ADR의 구현 상태를 보완하고 결정 당시 맥락과 이유는 보존했다.
+- AGENTS: 오래된 진행 상태 요약을 최신 정적 확인 결과와 맞췄다.
+- SESSIONS: 과거 기록을 유지하고 이번 복원 근거와 미해결 사항을 추가했다.
+
+### Validation limits / environment
+
+- Unity 실행·빌드·테스트·프로파일링은 수행하지 않았다. 개발자의 Editor 검증 완료 여부도
+  저장소 근거만으로는 확정하지 않는다. 코드 존재, 저장 참조, 실제 동작을 구분한다.
+- macOS에서 git-lfs 명령을 찾지 못해 기본 Git 상태 조회가 실패했다.
+  명령 단위로 LFS 필터를 끈 조회에서 변경으로 표시된 LiberationSans.ttf와 EmojiOne.png는
+  실제 내용의 SHA-256이 HEAD LFS OID와 일치했다. 사용자 수정으로 분류하지 않았다.
+  Git 설정을 변경하거나 패키지를 설치하지 않았으며 전체 LFS 자산 복원 여부는 미검증이다.
+- 외부 참고 저장소 구현은 이번 복원에서 검증하지 않았다.
+
+### Follow-ups
+
+- 개발자의 Editor 화면·입력·노드/간선 상태·재표시 검증 결과 확인.
+- 여러 설정과 시드에서 Boss 종착점, 시작점별 도달 가능성, 막다른 길 금지 검증.
+- RunManager 소유권·수명·RuntimeManager 관계, 풀링 단위와 최종 연결 위치 결정.
+- 일부 로컬 스킬의 “씬 미연결” 설명도 과거 상태다. 사용 시 최신 소스와 CURRENT를 우선한다.
+  이번에는 스킬 파일과 패키지 문서를 수정하지 않았다.
+
+---
+
 ## New session entry template
 
 ```markdown

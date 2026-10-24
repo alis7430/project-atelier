@@ -64,8 +64,12 @@ The initial context contained no confirmed gameplay ADRs. The decisions below we
 - **Decision:** 현재 생성·표시·입력 연결은 MapTestScene에서 담당한다.
   테스트가 어느 정도 진행된 후 다른 곳으로 이전한다.
 - **Rationale:** 개발자가 현재 테스트 단계의 연결 위치로 지정했다.
-- **Implementation:** MapTestScene.Start/Clear는 비어 있고 씬 연결은 아직 없다.
-  이는 개발자가 설명한 코드 작업 단계와 일치한다.
+- **Implementation — 2026-10-24 정적 확인:** MapTestScene.Start에 생성 → SetMap →
+  ShowMap → 최초 RefreshStates가 구현되었다. OnEnable/OnDisable의 클릭 구독·해제,
+  HandleNodeClicked의 방문 처리와 Clear의 표시 정리도 존재한다.
+  저장된 씬과 노드·선 프리팹 참조를 확인했다. Editor 동작 검증 완료 여부는 미확인이다.
+- **History:** 2026-10-22 최초 기록 당시에는 Start/Clear와 씬 연결이 없었으며,
+  이후 20b475d에서 연결이 구현되었다. 결정의 책임 배치는 유지된다.
 - **Open details:** 이전 위치와 구체 시점은 미정이다.
 - **Affected files:** Assets/_Projects/Scripts/Map/Test/MapTestScene.cs,
   MapManager.cs 및 MapView.cs(동일 Map 디렉터리).
@@ -81,8 +85,9 @@ The initial context contained no confirmed gameplay ADRs. The decisions below we
   BossEnemy를 강제하지 않고 교차 제거 뒤 도달 가능성을 검증하지 않는다.
 - **Consequences:** 생성 기본 틀이 있다는 사실을 규칙 검증 완료로 해석하지 않는다.
   테스트에서 타입, 시작점별 종착점 도달, 중간 막다른 길을 확인한다.
-- **Configuration:** MapConfig.asset은 임시 값이며 개발자가 테스트에서 수정한다.
-  현재 값과 규칙의 차이를 규칙 철회로 해석하지 않는다.
+- **Configuration — 2026-10-24 정적 확인:** MapConfig.asset은 현재 필드명과 일치하고
+  마지막 레이어는 BossEnemy, randomNodeValue=0이다. 값은 여전히 테스트용이다.
+  현재 설정의 일치가 생성기 전반의 규칙 보장이나 실행 검증 완료를 뜻하지 않는다.
 - **Affected files:** Assets/_Projects/Scripts/Map/MapGenerator.cs,
   Assets/_Projects/Scripts/Map/MapConfigSO.cs,
   Assets/Resources/ScriptableObject/Map/MapConfig.asset.
@@ -94,8 +99,10 @@ The initial context contained no confirmed gameplay ADRs. The decisions below we
 - **Decision:** 시드와 맵 진행은 씬 전환 후에도 유지한다.
   향후 RunManager를 두어 로그라이크 게임 한 번의 런을 관리한다.
 - **Rationale:** 씬 전환이 같은 런의 시드·맵 진행을 초기화해서는 안 된다.
-- **Implementation:** RunManager는 아직 구현되지 않았다.
-  현재 RuntimeManager는 등록되지 않았고 MapManager는 고정 시드를 사용한다.
+- **Implementation — 2026-10-24 정적 확인:** RunManager 구현과 RuntimeManager 등록은
+  발견하지 못했다. 테스트 진입은 MapTestScene이 씬의 _seed(저장값 99999)로
+  SystemRng를 만드는 경로다. MapManager.GenerateMap의 고정 시드 12345 경로도
+  남아 있지만 테스트 Start에서는 호출하지 않는다. 씬 간 진행 보존 연결은 없다.
 - **Conflict to address:** SceneManagerEX.LoadScene은 Managers.Clear를 호출하며
   RuntimeManager.Clear는 Seed와 Random을 지운다.
   향후 시스템을 단순 등록하기 전에 씬 정리와 런 종료의 경계를 정해야 한다.

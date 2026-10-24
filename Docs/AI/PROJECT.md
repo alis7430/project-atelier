@@ -1,6 +1,6 @@
 # Project Atelier — Project Overview
 
-> 마지막 갱신: 2026-10-22.
+> 마지막 갱신: 2026-10-24.
 > 제품 목표와 개발 방향은 개발자의 명시적 설명을 근거로 한다.
 > 구현 상태는 저장된 소스·설정·자산을 정적으로 확인한 결과다.
 > Unity 실행·빌드·테스트·프로파일링 결과를 의미하지 않는다.
@@ -14,13 +14,17 @@
   세부 기능·수치·콘텐츠까지 동일하다고 가정하지 않는다.
 - 개발 목표: 프로토타입 수준의 게임 개발.
 - 협업 구성: 개발자가 일러스트레이터 1명과 협업한다.
-- 현재 작업: 맵 생성 기본 틀을 바탕으로 MapView를 작성하고,
-  MapTestScene에서 연결하여 Unity Editor에서 확인한다.
-- 현재는 코드 작업 단계이며 씬에 연결하지 않은 상태다.
+- 현재 작업: 맵 생성 기본 틀을 바탕으로 맵 화면을 개발하고,
+  MapTestScene에서 Unity Editor 동작을 확인한다.
+- 2026-10-24 정적 확인: MapView와 테스트 씬의 생성·표시·입력 연결,
+  씬 및 노드·선 프리팹 참조가 구현되어 있다. 실제 Editor 검증 완료 여부는 미확인이다.
 - 출시 플랫폼, 성능 예산, 상세 콘텐츠 범위와 일정은 미확인이다.
 
-확인한 작업 경로:
-`D:\dev\Unity\unity-projects\project-atelier`.
+작업 환경은 Windows에서 macOS로 이어졌다.
+
+- 이전 경로: `D:\dev\Unity\unity-projects\project-atelier`.
+- 현재 경로: `/Users/urdev/dev/unity-projects/project-atelier`.
+
 다른 환경에서는 현재 프로젝트 루트를 사용한다.
 
 ## 2. 레퍼런스와 근거 구분
@@ -30,7 +34,8 @@ https://github.com/alis7430/slay-the-spire-map-in-unity
 
 - 제품 레퍼런스인 Slay the Spire 2와 맵 구현 참고 저장소를 구분한다.
 - 참고 저장소가 Slay the Spire 2의 실제 알고리즘이라는 뜻은 아니다.
-- 이번 문서 갱신에서는 지정 URL의 본문을 가져오지 못했다.
+- 2026-10-22 분석에서는 지정 URL의 본문을 가져오지 못했으며,
+  2026-10-24 컨텍스트 복원에서도 외부 구현을 검증하지 않았다.
   외부 소스의 세부 구현·버전·라이선스를 검증했다고 기록하지 않는다.
 - 유사한 이름의 다른 저장소를 지정 저장소로 바꾸어 인용하지 않는다.
 - 현재 프로젝트의 구현을 판단할 때는 로컬 소스가 근거다.
@@ -68,6 +73,8 @@ https://github.com/alis7430/slay-the-spire-map-in-unity
 - Assets/_Projects/Scripts/Utils/: 정수 범위, 셔플, 해상도 유틸리티.
 - Assets/_Projects/Scenes/MapTestScene.unity: 빌드 설정의 활성화 씬.
 - Assets/Resources/ScriptableObject/Map/: 맵 설정과 노드 아이콘 작성 데이터.
+- Assets/Resources/ScriptableObject/Map/Node/: 노드 타입별 MapNodeSO 자산 8개.
+- Assets/Resources/Prefabs/UI/Map/: MapNode 및 MapLine 프리팹.
 - Assets/Resources/Prefabs/UI/EventSystem.prefab: EventSystem 프리팹.
 - Packages/urdev-game-framework/Runtime/: 공용 게임 프레임워크.
 - Packages/urdev-game-framework/Docs/: 패키지 작성 문서.
@@ -88,13 +95,14 @@ Framework.cs는 개발자가 변경했으며, 이번 갱신에서는 관련 문�
 - 설정과 IRandom을 받는 레이어형 노드 그래프 생성기.
 - Map/Node 런타임 모델.
 - MapManager의 방문 판정, 현재 노드 및 방문 이력.
-- MapView/MapNode/MapLine의 표시·상태·클릭 이벤트 코드.
+- MapView/MapNode/MapLine의 레이아웃·노드/간선 상태·클릭 이벤트 코드.
+- MapTestScene의 생성·표시·초기 상태·방문 처리 연결과 저장된 씬/프리팹 참조.
 - 공용 자산·풀·사운드·JSON 테이블·입력·씬·UI 서비스.
-- 씬 연결 및 Editor 동작 확인은 아직 진행 전이다.
+- 씬 연결은 정적으로 확인했으며 Editor 동작·생성 규칙의 실행 검증은 미확인이다.
 
-### 승인된 방향, 구현 완료 아님
+### 승인된 방향과 남은 범위
 
-- 초기 맵 연결 책임은 MapTestScene에 둔다.
+- 초기 맵 연결 책임은 MapTestScene에 두며 현재 구현에 반영되어 있다.
   테스트가 어느 정도 진행된 뒤 다른 위치로 옮기며 목적지는 미정이다.
 - 마지막 노드는 반드시 Boss Enemy다.
 - 모든 시작점에서 종착점으로 가는 경로가 있어야 한다.
@@ -114,7 +122,7 @@ AI는 소스를 직접 참조하는 설계 파트너·코드 리뷰어다.
 - 과도한 추상화나 불필요한 리팩터링을 권장하지 않는다.
 - 문서 갱신이 유용한 시점에는 먼저 제안한다.
 - 개발자가 명시적으로 반영을 요청한 범위에서만 문서를 수정한다.
-- 이번 요청은 AGENTS.md와 Docs/AI의 기준 문서 갱신을 승인한다.
+- 2026-10-22 기준 문서 갱신과 2026-10-24 진행 상황 기록은 각각 명시 요청에 따른다.
   향후 자동 수정이나 생산 코드 변경에 대한 포괄 승인은 아니다.
 - 기존 결정의 이유와 세션 기록을 보존한다.
 
@@ -132,8 +140,8 @@ Accepted 결정은 의도의 근거다. 충돌 시 양쪽을 기록한다.
 
 읽기 전용 검토의 시작 예시:
 
-```powershell
-codex -C "D:\dev\Unity\unity-projects\project-atelier" --sandbox read-only
+```sh
+codex -C "/Users/urdev/dev/unity-projects/project-atelier" --sandbox read-only
 ```
 
 Unity 실행·빌드·테스트는 개발자가 수행한다.
