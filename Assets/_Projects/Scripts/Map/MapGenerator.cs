@@ -41,10 +41,10 @@ public class MapGenerator
         RandomizeNodePositions();
         RemoveCrossConnections();
         
-        // List<Node> availableNodes = _nodes.SelectMany(layer => layer)
-        //             .Where(node => node.NextNodeIds.Count > 0 || node.PrevNodeIds.Count > 0)
-        //             .ToList();
-        List<Node> availableNodes = _nodes.SelectMany(layer => layer).ToList();
+        List<Node> availableNodes = _nodes.SelectMany(layer => layer)
+                    .Where(node => node.NextNodeIds.Count > 0 || node.PrevNodeIds.Count > 0)
+                    .ToList();
+        // List<Node> availableNodes = _nodes.SelectMany(layer => layer).ToList();
         return new Map(availableNodes, _config.name);
     }
 
