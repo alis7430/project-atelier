@@ -59,10 +59,10 @@ public class MapManager : MonoBehaviour
                    target.NextNodeIds.Count > 0;
         }
 
-        Node current =
-            CurrentMap.GetNode(CurrentNodeId.Value);
+        Node current = CurrentMap.GetNode(CurrentNodeId.Value);
 
         return current != null &&
+               target.Layer == current.Layer + 1 &&
                current.NextNodeIds.Contains(nodeId);
     }
 

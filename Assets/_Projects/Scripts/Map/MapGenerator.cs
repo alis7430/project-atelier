@@ -8,7 +8,31 @@ public class MapGenerator
     private readonly List<List<Node>> _nodes = new List<List<Node>>();
     private readonly IRandom _random;
 
+    // 교차 처리 후에도 선택한 끝점들이 유지되는지 검증합니다.
+    private readonly List<Node> _startingNodes = new();
+    private readonly List<Node> _preBossNodes = new();
+
+    private Node _bossNode;
     private int _nextNodeId;
+
+#region Static Method
+    private static bool IsValidRange(IntRange range)
+    {
+        return range != null &&
+               range.Min >= 1 &&
+               range.Max >= range.Min;
+    }
+
+    private static bool IsFinite(float value)
+    {
+        return !float.IsNaN(value) && !float.IsInfinity(value);
+    }
+
+    private static bool IsUnitRange(float value)
+    {
+        return IsFinite(value) && value >= 0f && value <= 1f;
+    }
+#endregion
 
     public MapGenerator(MapConfigSO config, IRandom random)
     {
@@ -19,24 +43,28 @@ public class MapGenerator
     public void Clear()
     {
         _nodes.Clear();
+        _startingNodes.Clear();
+        _preBossNodes.Clear();
+
+        _bossNode = null;
         _nextNodeId = 0;
     }
 
     // Implementation for generating the map
     public Map GetMap()
     {
-        if(_config == null)
-        {
-            Debug.LogError("Cannot generate map. MapConfigSO is null.");
-            return null;
-        }
+        string error = Vaildate();
+
+        if(error != null)
+            return Fail(error);
 
         Clear();
 
         for (int layer = 0; layer < _config.layers.Count; layer++)
             PlaceLayer(layer);
 
-        GeneratePaths();
+        if (!GeneratePaths())
+            return Fail("Failed to generate a complete path.");
 
         RandomizeNodePositions();
         RemoveCrossConnections();
@@ -45,7 +73,188 @@ public class MapGenerator
                     .Where(node => node.NextNodeIds.Count > 0 || node.PrevNodeIds.Count > 0)
                     .ToList();
         // List<Node> availableNodes = _nodes.SelectMany(layer => layer).ToList();
+
+        // path 검증        
+        error = ValidatePaths(availableNodes);
+        if(error != null)
+            return Fail(error);
+
         return new Map(availableNodes, _config.name);
+    }
+
+    private Map Fail(string message)
+    {
+        Debug.LogError($"Map generation failed: {message}");
+        return null;
+    }
+
+    private string Vaildate()
+    {
+       if (_config == null)
+            return "MapConfigSO is null.";
+
+        if (_random == null)
+            return "IRandom is null.";
+
+        if (_config.layers == null || _config.layers.Count < 3)
+            return "At least three layers are required.";
+
+        if (!IsValidRange(_config.numOfStartingNodes))
+            return "Invalid starting node count range.";
+
+        if (!IsValidRange(_config.numOfPreBossNodes))
+            return "Invalid pre-boss node count range.";
+
+        if (_config.extraPaths < 0)
+            return "extraPaths must be non-negative.";
+
+        int width = _config.GridWidth;
+
+        // IntRange.GetSample에서 Max + 1을 사용
+        if (width == int.MaxValue)
+            return "Node count range is too large.";
+
+        long pathCount = (long)width + _config.extraPaths;
+
+        if (pathCount > int.MaxValue)
+            return "Path count is too large.";
+
+        // 모든 시작점/목적지 조합이 한 레이어당 한 칸 이동으로 연결될 수 있도록 제한하는 조건
+        int transitionsToPreBoss = _config.layers.Count - 2;
+
+        if (width - 1 > transitionsToPreBoss)
+        {
+            return "Too few layers for the grid width. " +
+                   "Required: GridWidth - 1 <= layers.Count - 2.";
+        }
+
+        if (!IsFinite(_config.LayerDistance) ||
+            _config.LayerDistance <= 0f)
+        {
+            return "LayerDistance must be finite and positive.";
+        }
+
+        if (_config.MapNodeSOList == null ||
+            _config.MapNodeSOList.Any(so => so == null))
+        {
+            return "MapNodeSOList contains a missing reference.";
+        }
+
+        if (_config.RandomNodeTypes == null)
+            return "RandomNodeTypes is null.";
+
+        if (_config.RandomNodeTypes.Contains(NodeType.BossEnemy))
+            return "BossEnemy cannot be a random node type.";
+
+        for (int i = 0; i < _config.layers.Count; i++)
+        {
+            MapLayer layer = _config.layers[i];
+
+            if (layer == null)
+                return $"Layer {i} is null.";
+
+            if (!IsFinite(layer.NodeApartDistance) ||
+                layer.NodeApartDistance <= 0f)
+            {
+                return $"Layer {i}: invalid NodeApartDistance.";
+            }
+
+            if (!IsUnitRange(layer.randomNodeValue) ||
+                !IsUnitRange(layer.randomizePosition))
+            {
+                return $"Layer {i}: random values must be within 0..1.";
+            }
+
+            if (i < _config.layers.Count - 1 &&
+                layer.NodeType == NodeType.BossEnemy)
+            {
+                return $"Layer {i}: BossEnemy is reserved for the final layer.";
+            }
+        }
+
+        return null;
+    }
+
+    private string ValidatePaths(List<Node> nodes)
+    {
+        if (_bossNode == null || !nodes.Contains(_bossNode))
+            return "The selected boss is missing.";
+
+        if (_bossNode.NodeType != NodeType.BossEnemy ||
+            _bossNode.Layer != _config.layers.Count - 1 ||
+            _bossNode.NextNodeIds.Count != 0)
+        {
+            return "Invalid boss node.";
+        }
+
+        if (_startingNodes.Any(node => !nodes.Contains(node)))
+            return "A selected starting node is missing.";
+
+        if (_preBossNodes.Any(node => !nodes.Contains(node)))
+            return "A selected pre-boss node is missing.";
+
+        var nodesById = nodes.ToDictionary(node => node.Id);
+
+        foreach (Node node in nodes)
+        {
+            if (node.Layer < 0 || node.Layer > _bossNode.Layer)
+                return $"Invalid layer: {node.Id}.";
+
+            if (node.Layer == 0)
+            {
+                if (!_startingNodes.Contains(node) ||
+                    node.PrevNodeIds.Count != 0)
+                {
+                    return $"Invalid starting node: {node.Id}.";
+                }
+            }
+            else if (node.PrevNodeIds.Count == 0)
+            {
+                return $"Node has no incoming path: {node.Id}.";
+            }
+
+            if (node != _bossNode)
+            {
+                if (node.Layer == _bossNode.Layer ||
+                    node.NodeType == NodeType.BossEnemy)
+                {
+                    return $"Unexpected final node: {node.Id}.";
+                }
+
+                if (node.NextNodeIds.Count == 0)
+                    return $"Dead end: {node.Id}.";
+            }
+
+            foreach (int nextId in node.NextNodeIds)
+            {
+                if (!nodesById.TryGetValue(nextId, out Node next))
+                    return $"Missing node: {nextId}.";
+
+                if (next.Layer != node.Layer + 1)
+                    return $"Invalid direction: {node.Id} -> {nextId}.";
+
+                if (!next.PrevNodeIds.Contains(node.Id))
+                    return $"Inconsistent connection: {node.Id} -> {nextId}.";
+
+                if (!IsFinite(node.position.y) ||
+                    !IsFinite(next.position.y) ||
+                    next.position.y <= node.position.y)
+                {
+                    return $"Non-forward position: {node.Id} -> {nextId}.";
+                }
+            }
+
+            foreach (int prevId in node.PrevNodeIds)
+            {
+                if (!nodesById.TryGetValue(prevId, out Node previous) ||
+                    !previous.NextNodeIds.Contains(node.Id))
+                {
+                    return $"Inconsistent previous connection: {prevId} -> {node.Id}.";
+                }
+            }
+        }
+
+        return null;
     }
 
     private Node GetFinalNode()
@@ -65,9 +274,9 @@ public class MapGenerator
         return GetNode(y, index);
     }
 
-    private void GeneratePaths()
+    private bool GeneratePaths()
     {
-        Node finalNode = GetFinalNode();
+        _bossNode = GetFinalNode();
 
         int numOfStartingNodes = _config.numOfStartingNodes.GetSample(_random);
         int numOfPreBossNodes = _config.numOfPreBossNodes.GetSample(_random);
@@ -84,15 +293,18 @@ public class MapGenerator
                     .Select(index => GetNode(0, index))
                     .ToList();
 
-        
+        _startingNodes.AddRange(startingNodes);
+
         candidateIndices.Shuffle(_random);
 
-        int preBossLayer = finalNode.Layer - 1;
+        int preBossLayer = _bossNode.Layer - 1;
 
         List<Node> preBossNodes = candidateIndices
                     .Take(numOfPreBossNodes)
                     .Select(index => GetNode(preBossLayer, index))
                     .ToList();
+
+        _preBossNodes.AddRange(preBossNodes);
 
         int numOfPaths = Mathf.Max(numOfStartingNodes, numOfPreBossNodes)
                         + Mathf.Max(0, _config.extraPaths);
@@ -102,17 +314,25 @@ public class MapGenerator
             Node start = startingNodes[i % startingNodes.Count];
             Node end = preBossNodes[i % preBossNodes.Count];
 
-            GeneratePath(start, end);
+            if(!GeneratePath(start, end))
+                return false;
 
-            Connect(end, finalNode);
+            Connect(end, _bossNode);
         }
+        return true;
     }
 
-    private void GeneratePath(Node from, Node to)
+    private bool GeneratePath(Node from, Node to)
     {
         int targetLayer = to.Layer;
         int targetIndex = to.Index;
         int lastIndex = from.Index;
+
+        int transitions = to.Layer - from.Layer;
+        if (transitions <= 0 || Mathf.Abs(to.Index - from.Index) > transitions)
+        {
+            return false;
+        }
         
         Node current = from;
         List<int> candidateIndices = new List<int>();
@@ -140,6 +360,10 @@ public class MapGenerator
             if(rightIndex < _config.GridWidth && horizontalDistance <= verticalDistance)
                 candidateIndices.Add(rightIndex);
 
+            // 진행할 후보가 없다면 생성 실패
+            if (candidateIndices.Count == 0)
+                return false;
+
             // choose next
             int randomIndex = _random.Range(0, candidateIndices.Count);
             int candidateIndex = candidateIndices[randomIndex];
@@ -153,6 +377,8 @@ public class MapGenerator
 
         // connect last node
         Connect(current, to);
+
+        return true;
     }
 
     private Node GetNode(int layer, int index)
@@ -201,6 +427,10 @@ public class MapGenerator
                 nodeType = randomNodeTypes.RandomElement(_random);
             }
 
+            // 마지막 레이어는 무작위 선택 결과와 상관없이 Boss 타입 보장
+            if(layerIndex == _config.layers.Count - 1)
+                nodeType = NodeType.BossEnemy;
+
             // Create node!
             Node node = new Node(nodeType, _nextNodeId++, layerIndex, index);
             
@@ -228,6 +458,10 @@ public class MapGenerator
                 float y = randomY * _config.LayerDistance;
 
                 Vector2 offset = new Vector2(x, y) * layer.randomizePosition;
+
+                // y축의 순서 역전 방지 코드
+                offset.y = Mathf.Clamp(offset.y, _config.LayerDistance * 0.4f, _config.LayerDistance * 0.4f);
+
                 node.SetPosition(node.position + offset);
             }
         }
@@ -253,6 +487,10 @@ public class MapGenerator
                 if(!right.NextNodeIds.Contains(top.Id))
                     continue;
 
+                // At first, connect vertical connection
+                Connect(node, top);
+                Connect(right, topRight);
+                
                 float randomValue = _random.Value();
 
                 if (randomValue < 0.2f)

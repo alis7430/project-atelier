@@ -473,7 +473,7 @@ GameObject:
   - component: {fileID: 613709817}
   - component: {fileID: 613709816}
   m_Layer: 5
-  m_Name: MapUI (1)
+  m_Name: Board
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -486,7 +486,7 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 613709814}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -495,7 +495,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 239.99995, y: 0.000068665}
+  m_AnchoredPosition: {x: 239.99995, y: 0.00006866501}
   m_SizeDelta: {x: 1440, y: 1080}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &613709816
@@ -1046,7 +1046,7 @@ MonoBehaviour:
   _config: {fileID: 11400000, guid: a4b71e1a6a5ab7341a550a3916c470ea, type: 2}
   _mapManager: {fileID: 1102050649}
   _mapView: {fileID: 2094173572}
-  _seed: 99999
+  _seed: 50000
 --- !u!1 &2094173570
 GameObject:
   m_ObjectHideFlags: 0
