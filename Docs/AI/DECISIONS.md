@@ -70,6 +70,11 @@ The initial context contained no confirmed gameplay ADRs. The decisions below we
   저장된 씬과 노드·선 프리팹 참조를 확인했다. Editor 동작 검증 완료 여부는 미확인이다.
 - **History:** 2026-10-22 최초 기록 당시에는 Start/Clear와 씬 연결이 없었으며,
   이후 20b475d에서 연결이 구현되었다. 결정의 책임 배치는 유지된다.
+- **2026-10-26 개발자 수용 및 구현 확인:** 새 맵 생성(GenerateNewMap),
+  진행을 유지하는 재표시(RedisplayCurrentMap), 표시 전용 정리(ClearDisplayedMap)를
+  MapTestScene에서 구분한다. 기존 Clear는 클릭 구독까지 해제하는 씬 정리 경로로 유지한다.
+  개발자가 제안을 수용해 코드를 적용하고 재표시·새 맵 생성·비활성화/재활성화·
+  정리 후 재표시 테스트에서 문제없음을 보고했다. AI 실행 검증은 아니다.
 - **Open details:** 이전 위치와 구체 시점은 미정이다.
 - **Affected files:** Assets/_Projects/Scripts/Map/Test/MapTestScene.cs,
   MapManager.cs 및 MapView.cs(동일 Map 디렉터리).
@@ -81,10 +86,13 @@ The initial context contained no confirmed gameplay ADRs. The decisions below we
 - **Decision:** 마지막 노드는 반드시 Boss Enemy다.
   모든 시작점에서 종착점으로 가는 경로가 있어야 하며 막다른 길은 허용하지 않는다.
 - **Rationale:** 개발자가 확정한 맵 진행 요구사항이다.
-- **Implementation:** 현재 생성기는 마지막 레이어를 종착점으로 선택하지만
-  BossEnemy를 강제하지 않고 교차 제거 뒤 도달 가능성을 검증하지 않는다.
+- **Implementation — 2026-10-26 정적 확인:** PlaceLayer가 마지막 레이어를 BossEnemy로
+  강제한다. 입력 설정 검증과 교차 제거 후 ValidatePaths가 추가되어 선택한 시작점/보스 직전
+  노드의 유지, 최종 Boss, 막다른 길, 레이어 방향·전후 연결 정합성 등을 검사한다.
+  실패 시 null을 반환하며 경로 복구·재시도는 없다.
 - **Consequences:** 생성 기본 틀이 있다는 사실을 규칙 검증 완료로 해석하지 않는다.
-  테스트에서 타입, 시작점별 종착점 도달, 중간 막다른 길을 확인한다.
+  여러 시드·설정의 실행 결과는 미확인이다. 이번 재표시 안정화 보고와 구분하여
+  타입, 시작점별 종착점 도달, 중간 막다른 길 및 생성 실패 처리를 확인한다.
 - **Configuration — 2026-10-24 정적 확인:** MapConfig.asset은 현재 필드명과 일치하고
   마지막 레이어는 BossEnemy, randomNodeValue=0이다. 값은 여전히 테스트용이다.
   현재 설정의 일치가 생성기 전반의 규칙 보장이나 실행 검증 완료를 뜻하지 않는다.
@@ -103,6 +111,9 @@ The initial context contained no confirmed gameplay ADRs. The decisions below we
   발견하지 못했다. 테스트 진입은 MapTestScene이 씬의 _seed(저장값 99999)로
   SystemRng를 만드는 경로다. MapManager.GenerateMap의 고정 시드 12345 경로도
   남아 있지만 테스트 Start에서는 호출하지 않는다. 씬 간 진행 보존 연결은 없다.
+- **2026-10-26 구현 보완:** 현재 테스트 진입은 Start → GenerateNewMap이며 저장된 씬의
+  _seed는 12312다. 같은 씬의 재표시는 SetMap을 생략하여 진행을 유지하지만,
+  이 테스트 결과가 씬 전환 후 런 상태 보존까지 구현·검증했다는 의미는 아니다.
 - **Conflict to address:** SceneManagerEX.LoadScene은 Managers.Clear를 호출하며
   RuntimeManager.Clear는 Seed와 Random을 지운다.
   향후 시스템을 단순 등록하기 전에 씬 정리와 런 종료의 경계를 정해야 한다.
@@ -122,6 +133,8 @@ The initial context contained no confirmed gameplay ADRs. The decisions below we
 - **Rationale:** 진행 중 현재 맵을 재사용하여 확인하는 기능이 필요하다.
 - **Implementation:** MapView는 현재 Clear 후 Instantiate하며 Clear에서 Destroy한다.
   공용 PoolManager는 있지만 MapView와 연결되어 있지 않다.
+- **2026-10-26 진행:** 기존 Instantiate/Destroy 방식으로 같은 맵 재표시와 정리 후 복구를
+  구현하고 개발자 테스트 결과 문제없음을 확인했다. 풀링 자체는 아직 통합되지 않았다.
 - **Open details:** 전체 맵·노드·선 중 풀링 단위, 반환 시점,
   씬 간 표시 객체 수명 및 공용 풀 사용 방식은 미정이다.
 - **Consequences:** 표시 재사용과 런 데이터 보존을 분리해 검토한다.

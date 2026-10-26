@@ -1,8 +1,8 @@
 # Project Atelier — Architecture Map
 
-> 마지막 갱신: 2026-10-24. 소스 기준 커밋: 81014b0.
+> 마지막 갱신: 2026-10-26. 관련 작업 트리 소스 확인(조회 HEAD: 2c9c332).
 > 현재 구현과 승인된 향후 구조를 구분한다.
-> 소스·설정·자산을 정적으로 분석했으며 실행 검증은 수행하지 않았다.
+> AI는 실행 검증을 수행하지 않았다. 재표시·정리 안정화는 개발자 테스트 보고상 문제없다.
 
 ## 1. 코드와 어셈블리 경계
 
@@ -82,8 +82,11 @@ BaseScene.Awake → MapTestScene.Init → BaseScene.Init.
 - Managers 접근이 Singleton 지연 생성·초기화로 이어질 수 있다.
 - MapTestScene은 SceneName을 설정한다.
 - MapTestScene.OnEnable/OnDisable은 View 클릭 이벤트를 구독·해제한다.
-- Start는 참조 확인 후 MapGenerator와 SystemRng(_seed)를 생성하고,
-  SetMap → ShowMap → 최초 RefreshStates를 호출한다.
+- Start → GenerateNewMap은 참조 확인 후 MapGenerator와 SystemRng(_seed)를 생성하고,
+  생성 성공 시 SetMap → RedisplayCurrentMap(ShowMap → RefreshStates)을 호출한다.
+- RedisplayCurrentMap은 SetMap 없이 현재 맵·진행을 다시 표시한다.
+- ClearDisplayedMap은 클릭 구독·진행을 유지한 채 MapView.Clear만 호출한다.
+  세 확인용 ContextMenu 메서드는 Application.isPlaying으로 제한된다.
 - Clear는 View 클릭 이벤트를 해제하고 MapView.Clear를 호출한다.
 
 ### Managers
@@ -102,8 +105,8 @@ BaseScene.Awake → MapTestScene.Init → BaseScene.Init.
 
 - RuntimeManager.Init은 비어 있고 GenerateSeed가 RNG를 만든다.
 - 등록 호출은 발견하지 못했다.
-- 테스트 진입은 MapTestScene.Start가 직접 생성기를 만드는 경로이며,
-  씬의 _seed 저장값은 99999다. RuntimeManager.Random을 사용하지 않는다.
+- 테스트 진입은 MapTestScene.Start → GenerateNewMap이 생성기를 만드는 경로이며,
+  씬의 _seed 저장값은 12312다. RuntimeManager.Random을 사용하지 않는다.
 - MapManager.GenerateMap은 고정 시드 12345를 사용하지만 테스트 Start에서는 호출하지 않는다.
 - SceneManagerEX.LoadScene은 Managers.Clear를 먼저 호출한다.
 - RuntimeManager.Clear는 Seed=0, Random=null로 만든다.
@@ -154,25 +157,26 @@ flowchart TD
 ### 생성기
 
 GetMap:
-1. 내부 상태 초기화.
+1. 입력 설정 검증 후 내부 상태 초기화.
 2. 레이어별 노드 배치.
 3. 시작점과 종착점 직전 노드 선택·경로 생성.
 4. 좌표 난수 변동.
 5. 인접 격자의 교차 대각선 연결 제거.
-6. 전후 연결이 있는 노드만 Map에 전달.
+6. 전후 연결이 있는 노드만 추린 뒤 ValidatePaths를 통과하면 Map에 전달.
 
 승인된 규칙:
 - 마지막 노드는 BossEnemy.
 - 모든 시작점에서 종착점에 도달해야 한다.
 - 막다른 길 금지.
 
-현재 확인할 차이:
-- 마지막 레이어를 종착점으로 선택하지만 BossEnemy를 일반 규칙으로 강제하지 않는다.
-  현재 MapConfig.asset의 마지막 레이어는 BossEnemy이며 타입 무작위화 확률은 0이다.
-- 교차 연결 제거 뒤 도달 가능성 검증·보정이 없다.
-- 연결 하나 이상인 노드 필터는 종착점 도달 보장이 아니다.
-- 빈 레이어·잘못된 범위·0개 시작점·빈 경로 후보 검증이 부족하다.
-- 필수 규칙 충족은 아직 실행 검증하지 않았다.
+2026-10-26 소스 확인:
+- PlaceLayer는 마지막 레이어 타입을 BossEnemy로 강제한다.
+- Vaildate(현재 소스의 철자)는 범위·레이어 수·간격·확률·참조·Boss 배치 제약 등을 검증한다.
+- 교차 제거 후 ValidatePaths는 선택한 시작점/보스 직전 노드의 유지,
+  최종 Boss, 비종착 노드의 막다른 길, 레이어 방향과 전후 연결 정합성 등을 검사한다.
+- 실패 시 오류를 기록하고 null을 반환한다. 경로 자동 복구·재시도는 없다.
+- MapManager.ValidateMapSeeds는 10,000회 생성의 예외/null 여부를 확인하는 Editor 진입점이다.
+  여러 시드·설정의 실행 결과는 이번 재표시 테스트 보고로 확정하지 않는다.
 
 ### 진행과 입력
 
@@ -205,6 +209,11 @@ MapTestScene은 OnEnable/OnDisable에서 구독·해제하고 Clear에서도 해
 - MapLine은 Awake/SetData에서 Image.raycastTarget을 false로 설정한다.
 - MapView.Clear는 노드 이벤트 구독 해제 후 노드·선을 비활성화하고 Destroy한다.
   컬렉션과 _displayedMap도 초기화한다. OnDestroy는 Clear와 외부 이벤트 정리를 수행한다.
+- 표시 전용 ClearDisplayedMap과 씬 정리용 MapTestScene.Clear를 구분한다.
+  후자는 외부 클릭 구독도 해제하므로 화면 정리 확인용으로 사용하지 않는다.
+- 재표시·새 맵 생성·화면 비활성화/재활성화·정리 후 재표시는
+  개발자가 수정 후 테스트 결과 문제없음을 보고했다(2026-10-26).
+  세부 로그·반복 횟수는 제공되지 않았고, 씬 전환과 풀링은 별도 미완료 범위다.
 
 승인된 목표는 맵 풀링을 통해 게임 중 현재 지도를 다시 여는 것이다.
 현재 MapView에는 공용 풀 연결이 없다.

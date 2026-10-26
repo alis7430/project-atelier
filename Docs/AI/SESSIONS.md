@@ -205,6 +205,61 @@ Git으로 보존된 문서와 실제 소스·자산을 대조하여 Windows에�
 
 ---
 
+## 2026-10-26 — 맵 재표시·정리 안정화 구현 및 개발자 테스트 보고
+
+### Goal
+
+같은 맵 재표시, 새 맵 생성, 화면 비활성화/재활성화, 표시 정리 후 재표시를 구분하여 설계했다.
+개발자는 제안을 수용해 코드를 수정하고 테스트 결과 문제없음을 보고했으며 문서 반영을 요청했다.
+
+### Source reviewed
+
+- MapTestScene.cs, MapManager.cs, MapView.cs, MapGenerator.cs.
+- RuntimeManager.cs, SceneManagerEX.cs, MapTestScene.unity의 저장된 _seed.
+- Docs/AI의 PROJECT/CURRENT/ARCHITECTURE/DECISIONS 및 관련 이전 세션 기록.
+- 현재 작업 트리의 소스를 기준으로 확인했다(조회 HEAD: 2c9c332).
+
+### Findings
+
+- Start는 GenerateNewMap을 호출한다. 생성 성공 시에만 SetMap으로 맵·진행을 초기화한다.
+- RedisplayCurrentMap은 현재 Map으로 ShowMap → RefreshStates를 호출하며 진행을 초기화하지 않는다.
+- ClearDisplayedMap은 표시만 정리하고 클릭 구독과 진행을 유지한다.
+  기존 Clear는 구독 해제까지 수행하는 씬 정리 경로다.
+- 세 ContextMenu 진입점은 Play Mode에서만 동작한다.
+- 생성기에는 마지막 레이어 Boss 강제, 입력 설정 검증 및 교차 제거 후 ValidatePaths가 있다.
+  이전 문서의 “Boss 강제·경로 검증 없음”은 과거 상태로 정정했다.
+- 현재 저장된 테스트 씬의 시드는 12312다. 2026-10-24의 99999 기록은 당시 이력으로 보존한다.
+
+### Decisions
+
+- 기존 ADR-001의 테스트 연결 책임 안에서 생성·재표시·표시 정리 진입점 분리를 개발자가 수용했다.
+- RunManager의 구체 소유권·등록 방식, 풀링 단위·반환 정책은 이번에 결정하지 않았다.
+
+### Validation
+
+- 개발자 보고: 위 안정화 코드를 수정한 뒤 테스트 결과 문제없음.
+- 세부 항목별 로그·반복 횟수·시드/설정 목록은 제공되지 않았다.
+- AI는 정적 소스 확인과 문서 편집·차이 검토만 수행했으며 Unity·빌드·테스트를 실행하지 않았다.
+- 생성 규칙의 여러 시드·설정 검증, 씬 전환 후 보존, 풀링 검증은 완료로 추정하지 않는다.
+
+### Documentation changes
+
+- CURRENT/PROJECT에 구현 상태와 개발자 테스트 보고를 반영했다.
+- ARCHITECTURE에 호출 경로·정리 경계와 현재 생성기 검증을 반영했다.
+- DECISIONS의 기존 ADR-001~004에 수용된 범위와 구현 상태를 보완했다.
+- 생산 코드·씬·자산·프로젝트 설정 및 AGENTS.md는 수정하지 않았다.
+
+### Follow-ups
+
+1. 여러 시드·설정에서 생성 규칙 및 실패 시 기존 맵·진행 유지 확인.
+   기존 MapManager.ValidateMapSeeds 실행 여부·결과와 실패 시드 기록도 확인한다.
+2. RunManager의 시드·맵·진행 소유권, RuntimeManager와의 관계,
+   씬 정리와 런 종료 경계를 설계하고 씬 전환 후 복원 확인.
+3. 풀링 단위와 대여·반환 시 상태/이벤트 정책 설계 후 통합.
+4. 확인 결과에 따라 표현·설정 및 MapTestScene 이후 연결 책임 위치 결정.
+
+---
+
 ## New session entry template
 
 ```markdown

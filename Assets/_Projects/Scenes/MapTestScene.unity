@@ -1046,7 +1046,7 @@ MonoBehaviour:
   _config: {fileID: 11400000, guid: a4b71e1a6a5ab7341a550a3916c470ea, type: 2}
   _mapManager: {fileID: 1102050649}
   _mapView: {fileID: 2094173572}
-  _seed: 50000
+  _seed: 12312
 --- !u!1 &2094173570
 GameObject:
   m_ObjectHideFlags: 0
