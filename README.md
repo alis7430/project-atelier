@@ -14,6 +14,7 @@ Slay the Spire 2를 참고하여 개발 중인 **Unity 기반 덱빌딩 로그�
 
 ## 개발 환경
 
+- Windows PC
 - Unity 6000.3.6f1
 - C#
 - Universal Render Pipeline (URP)
@@ -25,12 +26,12 @@ Slay the Spire 2를 참고하여 개발 중인 **Unity 기반 덱빌딩 로그�
 1. 저장소를 클론합니다.
 2. Unity Hub에서 Unity 6000.3.6f1로 프로젝트를 엽니다.
 3. `Assets/_Projects/Scenes/MapTestScene.unity`를 엽니다.
-4. Play Mode에서 맵 생성과 노드 선택을 확인합니다.
 
 ## 개발 예정
 
-- 씬 전환 시 시드와 맵 진행 상태 유지
-- 한 번의 플레이를 관리하는 RunManager
-- 맵 표시 객체 풀링
+- **덱빌딩** — 카드 수집, 덱 구성 및 강화
+- **전투** — 카드를 활용한 턴제 전투와 적 행동
+- **탐험 콘텐츠** — 이벤트, 상점, 휴식 등
+- **런 진행** — 보상 획득과 보스 전투로 이어지는 플레이 흐름
 
 > 개발 중인 프로토타입으로, 기능과 구조는 변경될 수 있습니다.
