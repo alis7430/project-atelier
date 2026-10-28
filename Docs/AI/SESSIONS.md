@@ -260,6 +260,55 @@ Git으로 보존된 문서와 실제 소스·자산을 대조하여 Windows에�
 
 ---
 
+## 2026-10-28 — MapManager 책임 이관 리뷰 및 수정 구현 기록
+
+### Goal
+
+개발자가 MapTestScene의 기능을 MapManager로 이관한 구조를 리뷰했다.
+이후 일부 코드를 수정하고 문서 반영을 명시적으로 요청했다.
+
+### Source reviewed
+
+- MapManager.cs, Test/MapTestScene.cs, MapView.cs, MapNode.cs, Map.cs, Node.cs.
+- RunManager.cs, RuntimeManager.cs, SystemRng.cs 및 MapGenerator의 생성·입력 검증 경로.
+- Managers/IGameSystem/BaseScene/SceneManagerEX, 관련 asmdef와 패키지 manifest.
+- MapTestScene.unity 및 관련 스크립트·설정·프리팹의 GUID 참조.
+- 최종 문서 반영 시 MapManager/MapTestScene/RunManager 소스와 저장된 시드를 재확인했다.
+  조회 HEAD는 a2bfaec이며 미커밋 변경을 포함한다.
+
+### Findings
+
+- MapManager가 생성·표시·클릭 연결을 담당하고 MapTestScene은 테스트 진입점으로 축소되었다.
+- 최초 리뷰의 표시 전용 정리 회귀는 MapManager.ClearDisplayedMap과 테스트 씬의 위임으로 수정되었다.
+- GenerateMap(int customSeed = 0)은 bool을 반환하며, 테스트 씬의 _seed를 전달하고
+  true일 때만 DisplayMap을 호출하도록 수정되었다. 저장된 시드는 40000이다.
+- customSeed > 0은 SystemRng(customSeed)를 사용하고 그 외는 RuntimeManager.Random을 참조한다.
+  RuntimeManager 등록·RNG 초기화 연결은 발견하지 못했다. 미등록 시 .Random 접근에서 예외가
+  발생할 수 있으며 생성기 생성 후의 null 검사는 이를 보호하지 않는다.
+- 생성 결과 null 또는 설정 누락은 false 반환으로 기존 맵·진행을 유지한다.
+  이 계약이 서비스 접근 예외까지 처리한다는 뜻은 아니다.
+- MapManager.Clear는 맵·진행·표시 전체 초기화이며 클릭 구독은 유지한다.
+  이벤트 구독·해제는 OnEnable/OnDisable에서 수행한다.
+- RunManager는 IGameSystem 골격만 추가되었고 런 데이터 소유·생성/초기화 호출은 없다.
+
+### Decisions / documentation
+
+- 개발자가 구현한 연결 책임 이전을 ADR-001에 반영했다.
+- PROJECT/CURRENT/ARCHITECTURE를 최신 호출·소유권·정리 경계로 갱신했다.
+- ADR-003/004에 런 관리 골격과 표시 제어 이관 상태를 보완했다.
+- AI 권고를 새로운 Accepted 결정으로 추가하지 않았다.
+
+### Validation / follow-ups
+
+- 2026-10-26 개발자 테스트 보고는 이관 전 구현에 대한 기록으로 보존한다.
+  10-28 수정 후 실행 결과는 제공되지 않았다. AI는 Unity·빌드·테스트를 실행하지 않았다.
+- 표시 정리 후 진행 유지 재표시, 양수 시드 변경, 생성 실패 및 Manager 재활성화 후 입력을 확인한다.
+- customSeed <= 0의 RuntimeManager/RNG 준비와 누락 시 실패 처리를 정리한다.
+- 씬 전환 후 런 상태 보존과 풀링은 별도 미완료 범위다.
+- 이번 변경은 명시적으로 요청한 Docs/AI 문서에 한정한다. 생산 코드·자산·설정·AGENTS.md는 수정하지 않았다.
+
+---
+
 ## New session entry template
 
 ```markdown

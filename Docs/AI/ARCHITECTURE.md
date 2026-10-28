@@ -1,8 +1,9 @@
 # Project Atelier — Architecture Map
 
-> 마지막 갱신: 2026-10-26. 관련 작업 트리 소스 확인(조회 HEAD: 2c9c332).
+> 마지막 갱신: 2026-10-28. 관련 작업 트리 소스 확인(조회 HEAD: a2bfaec, 미커밋 변경 포함).
 > 현재 구현과 승인된 향후 구조를 구분한다.
 > AI는 실행 검증을 수행하지 않았다. 재표시·정리 안정화는 개발자 테스트 보고상 문제없다.
+> 위 보고는 2026-10-26 이관 전 구현에 해당한다. 10-28 책임 이관 후 실행 결과는 미보고다.
 
 ## 1. 코드와 어셈블리 경계
 
@@ -41,12 +42,12 @@ GUID의 실제 대상은 허용된 탐색 범위에서 확정하지 않았다.
 | 맵 모델 | Map, Node | 노드, ID 조회, 좌표와 전후 연결 | Assets/_Projects/Scripts/Map/Map.cs, Node.cs |
 | 작성 설정 | MapConfigSO, MapLayer, MapNodeSO | 레이어·범위·아이콘 매핑 | Assets/_Projects/Scripts/Map/MapConfigSO.cs, MapLayer.cs, MapNodeSO.cs |
 | 생성 | MapGenerator | 노드 배치, 경로 생성, 좌표 변동, 교차 제거 | Assets/_Projects/Scripts/Map/MapGenerator.cs |
-| 진행 | MapManager | 현재 맵·노드·방문 이력과 이동 판정 | Assets/_Projects/Scripts/Map/MapManager.cs |
+| 맵 제어·진행 | MapManager | 생성 요청, 현재 맵·진행, 이동 판정, 클릭 수신, 표시·정리 조정 | Assets/_Projects/Scripts/Map/MapManager.cs |
 | 표시 | MapView, MapNode, MapLine | uGUI 표시와 클릭 전달 | Assets/_Projects/Scripts/Map/MapView.cs, MapNode.cs, MapLine.cs |
 | 난수 | IRandom, SystemRng | 난수 구현 주입 | Assets/_Projects/Scripts/Random/ |
-| 현재 시드 코드 | RuntimeManager | Seed/Random 보관, 등록 연결 없음 | Assets/_Projects/Scripts/System/RuntimeManager.cs |
-| 현재 구성 지점 | MapTestScene | 생성·표시·초기 상태·클릭·방문 처리 및 표시 정리 연결 | Assets/_Projects/Scripts/Map/Test/MapTestScene.cs |
-| 향후 런 관리 | RunManager | 한 번의 런 관리 예정, 구현 없음 | 개발자 결정 ADR-003 |
+| 현재 시드 코드 | RuntimeManager | Seed/Random 보관, MapManager 기본 RNG 참조 존재, 등록 연결 없음 | Assets/_Projects/Scripts/System/RuntimeManager.cs |
+| 테스트 진입점 | MapTestScene | 시작·수동 테스트 호출, 시드 전달, 씬 정리 위임 | Assets/_Projects/Scripts/Map/Test/MapTestScene.cs |
+| 향후 런 관리 | RunManager | IGameSystem 골격만 존재, 런 상태 소유·생성/초기화 연결 없음 | Assets/_Projects/Scripts/System/RunManager.cs, ADR-003 |
 
 Map/Node는 MonoBehaviour가 아닌 일반 C# 객체지만 Vector2 등
 Unity 타입에 의존하므로 완전히 엔진 독립적인 모델은 아니다.
@@ -81,13 +82,16 @@ BaseScene.Awake → MapTestScene.Init → BaseScene.Init.
 - EventSystem이 없으면 Managers.Resource로 EventSystem 프리팹을 생성한다.
 - Managers 접근이 Singleton 지연 생성·초기화로 이어질 수 있다.
 - MapTestScene은 SceneName을 설정한다.
-- MapTestScene.OnEnable/OnDisable은 View 클릭 이벤트를 구독·해제한다.
-- Start → GenerateNewMap은 참조 확인 후 MapGenerator와 SystemRng(_seed)를 생성하고,
-  생성 성공 시 SetMap → RedisplayCurrentMap(ShowMap → RefreshStates)을 호출한다.
-- RedisplayCurrentMap은 SetMap 없이 현재 맵·진행을 다시 표시한다.
-- ClearDisplayedMap은 클릭 구독·진행을 유지한 채 MapView.Clear만 호출한다.
+- MapManager.OnEnable/OnDisable이 View 클릭 이벤트를 구독·해제한다.
+- Start → GenerateNewMap → MapManager.GenerateMap(_seed)이 생성기를 호출한다.
+  생성 성공 시 private SetMap이 기존 맵·진행·표시를 Clear하고 새 맵을 설정한다.
+  GenerateMap이 true를 반환한다.
+  MapTestScene은 true일 때 DisplayMap(ShowMap → RefreshStates)을 호출한다.
+- RedisplayCurrentMap은 DisplayMap을 호출하여 진행을 유지한다.
+- MapTestScene.ClearDisplayedMap → MapManager.ClearDisplayedMap → MapView.Clear는 표시만 정리한다.
   세 확인용 ContextMenu 메서드는 Application.isPlaying으로 제한된다.
-- Clear는 View 클릭 이벤트를 해제하고 MapView.Clear를 호출한다.
+- MapTestScene.Clear → MapManager.Clear는 맵·현재 노드·방문 이력·표시를 초기화한다.
+  Clear 자체는 View 클릭 구독을 해제하지 않는다.
 
 ### Managers
 
@@ -105,9 +109,13 @@ BaseScene.Awake → MapTestScene.Init → BaseScene.Init.
 
 - RuntimeManager.Init은 비어 있고 GenerateSeed가 RNG를 만든다.
 - 등록 호출은 발견하지 못했다.
-- 테스트 진입은 MapTestScene.Start → GenerateNewMap이 생성기를 만드는 경로이며,
-  씬의 _seed 저장값은 12312다. RuntimeManager.Random을 사용하지 않는다.
-- MapManager.GenerateMap은 고정 시드 12345를 사용하지만 테스트 Start에서는 호출하지 않는다.
+- 테스트 진입은 MapTestScene.Start → GenerateNewMap → MapManager.GenerateMap(_seed)이며,
+  씬의 _seed 저장값은 40000이다. customSeed > 0이면 SystemRng(customSeed)를 사용한다.
+- GenerateMap(int customSeed = 0)의 customSeed <= 0 경로는 RuntimeManager.Random을 참조한다.
+  등록·RNG 초기화 호출은 발견하지 못했다. 미등록 시 .Random 접근에서 예외가 발생할 수 있다.
+  생성기 생성 후의 null 검사는 이 접근을 보호하지 않으며, bool 반환이 모든 예외를 처리하지는 않는다.
+- RunManager는 IGameSystem 골격이다. Init에서 자기 등록하고 Clear는 비어 있으며,
+  생성·초기화 호출과 맵·시드·진행 소유는 발견하지 못했다.
 - SceneManagerEX.LoadScene은 Managers.Clear를 먼저 호출한다.
 - RuntimeManager.Clear는 Seed=0, Random=null로 만든다.
 
@@ -126,7 +134,7 @@ BaseScene.Awake → MapTestScene.Init → BaseScene.Init.
 
 ```mermaid
 flowchart TD
-    Scene["MapTestScene: 현재 연결 책임"]
+    Scene["MapTestScene: 테스트 진입점"]
     Manager["MapManager"]
     Generator["MapGenerator"]
     Config["MapConfigSO / MapLayer"]
@@ -137,10 +145,9 @@ flowchart TD
     LineUI["MapLine"]
     Run["RunManager: 향후 런 관리"]
 
-    Scene -->|"Start: 생성"| Generator
-    Scene -->|"SetMap / TryVisitNode"| Manager
-    Scene -->|"ShowMap / 최초 RefreshStates"| View
-    Manager -->|"별도 GenerateMap 경로"| Generator
+    Scene -->|"GenerateMap(seed) / DisplayMap / 정리 위임"| Manager
+    Manager -->|"GenerateMap: 생성 요청"| Generator
+    Manager -->|"ShowMap / RefreshStates"| View
     Config --> Generator
     RNG --> Generator
     Generator --> Model
@@ -149,8 +156,7 @@ flowchart TD
     View --> NodeUI
     View --> LineUI
     NodeUI -->|"OnClicked"| View
-    View -->|"OnNodeClicked → HandleNodeClicked"| Scene
-    Manager -->|"방문 성공 시 RefreshStates"| View
+    View -->|"OnNodeClicked → OnNodeClicked(MapNode)"| Manager
     Run -. "시드·맵 진행의 씬 간 유지: 설계 예정" .-> Manager
 ```
 
@@ -180,7 +186,7 @@ GetMap:
 
 ### 진행과 입력
 
-- SetMap은 모델 교체와 방문 상태 초기화만 한다.
+- private SetMap은 Clear로 기존 맵·진행·표시를 정리한 후 새 모델을 설정한다.
 - 최초 방문은 Layer 0이며 다음 연결이 있는 노드에 허용한다.
 - 이후 방문은 현재 노드의 NextNodeIds에 포함된 대상에 허용한다.
 - TryVisitNode 성공 시 상태 갱신 → RefreshView → OnNodeSelected.
@@ -188,11 +194,10 @@ GetMap:
 
 현재 이벤트:
 Button.onClick → MapNode.OnClicked → MapView.OnNodeClicked →
-MapTestScene.HandleNodeClicked → MapManager.TryVisitNode(MapNode.Node.Id).
+MapManager.OnNodeClicked(MapNode) → MapManager.TryVisitNode(MapNode.Node.Id).
 
-View 이벤트는 MapNode를 전달하며 MapTestScene이 ID로 변환한다.
-MapManager의 private OnNodeClicked(int)는 현재 이 경로에서 사용하지 않는다.
-MapTestScene은 OnEnable/OnDisable에서 구독·해제하고 Clear에서도 해제한다.
+View 이벤트는 MapNode를 전달하며 MapManager가 ID로 변환한다.
+MapManager는 OnEnable/OnDisable에서 구독·해제한다. Clear는 구독을 유지한다.
 전역 Event Bus 구현은 발견하지 못했다.
 
 ### 표시와 재열기
@@ -209,8 +214,9 @@ MapTestScene은 OnEnable/OnDisable에서 구독·해제하고 Clear에서도 해
 - MapLine은 Awake/SetData에서 Image.raycastTarget을 false로 설정한다.
 - MapView.Clear는 노드 이벤트 구독 해제 후 노드·선을 비활성화하고 Destroy한다.
   컬렉션과 _displayedMap도 초기화한다. OnDestroy는 Clear와 외부 이벤트 정리를 수행한다.
-- 표시 전용 ClearDisplayedMap과 씬 정리용 MapTestScene.Clear를 구분한다.
-  후자는 외부 클릭 구독도 해제하므로 화면 정리 확인용으로 사용하지 않는다.
+- MapManager.ClearDisplayedMap은 표시만 정리하고 진행·클릭 구독을 유지한다.
+  MapTestScene.Clear가 위임하는 MapManager.Clear는 진행까지 초기화하므로
+  화면 정리 확인에는 사용하지 않는다. 클릭 구독 해제는 OnDisable에서 담당한다.
 - 재표시·새 맵 생성·화면 비활성화/재활성화·정리 후 재표시는
   개발자가 수정 후 테스트 결과 문제없음을 보고했다(2026-10-26).
   세부 로그·반복 횟수는 제공되지 않았고, 씬 전환과 풀링은 별도 미완료 범위다.
@@ -224,7 +230,8 @@ MapTestScene은 OnEnable/OnDisable에서 구독·해제하고 Clear에서도 해
 
 - 활성화된 빌드 씬: Assets/_Projects/Scenes/MapTestScene.unity.
 - MapTestScene/MapManager/MapView 스크립트 GUID와 씬의 Config/Manager/View 참조를 확인했다.
-- MapManager._view와 MapTestScene._mapView는 같은 MapView를 참조한다.
+- MapManager._config/_view 및 MapTestScene._mapManager가 연결되어 있다.
+  MapTestScene 코드에서 제거한 _config/_mapView 항목은 씬 YAML에 남아 있으나 현재 사용하지 않는다.
 - MapView에는 content, nodeRoot, lineRoot 및 노드·선 프리팹이 연결되어 있다.
 - 프리팹: Assets/Resources/Prefabs/UI/Map/MapNode.prefab 및 MapLine.prefab.
   각 스크립트 GUID와 Image/Button 참조, View의 프리팹 GUID/fileID를 대조했다.
@@ -236,7 +243,8 @@ MapTestScene은 OnEnable/OnDisable에서 구독·해제하고 Clear에서도 해
   이것만으로 Missing Script나 게임 장르를 추정하지 않는다.
 
 기존 씬 미연결 기록 이후 20b475d에서 테스트 연결이 구현되었다.
-MapTestScene의 연결 책임은 향후 다른 위치로 이전할 계획이며 목적지는 미정이다.
+2026-10-28 생성·표시·클릭 연결 책임은 MapManager로 이전되었다.
+MapTestScene은 테스트 호출을 담당한다. 런 상태 소유권·씬 수명 분리는 아직 미구현이다.
 
 MapConfig.asset:
 - 경로: Assets/Resources/ScriptableObject/Map/MapConfig.asset.

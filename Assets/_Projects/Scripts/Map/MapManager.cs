@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using URDev.GameFramework;
 
 public class MapManager : MonoBehaviour
 {
@@ -14,32 +15,46 @@ public class MapManager : MonoBehaviour
 
     public event System.Action<Node> OnNodeSelected;
 
-    public void GenerateMap()
+    private void OnEnable()
     {
-        if (_config == null) return;
+        if (_view != null)
+            _view.OnNodeClicked += OnNodeClicked;
+    }
 
-        //MapGenerator mapGenerator = new MapGenerator(config, Managers.GetSystem<RuntimeManager>().Random);
-        MapGenerator mapGenerator = new MapGenerator(_config, new SystemRng(12345));
+    private void OnDisable()
+    {
+        if (_view != null)
+            _view.OnNodeClicked -= OnNodeClicked;
+    }
+
+    public bool GenerateMap(int customSeed = 0)
+    {
+        if (_config == null)
+        {
+            Debug.LogError("MapConfigSO is not assigned.", this);
+            return false;
+        }
+
+        MapGenerator mapGenerator = customSeed > 0
+            ? new MapGenerator(_config, new SystemRng(customSeed))
+            : new MapGenerator(_config, Managers.GetSystem<RuntimeManager>().Random);
+
+        if (mapGenerator == null)
+        {
+            Debug.LogError("MapGenerator is not initialized.", this);
+            return false;
+        }
 
         Map map = mapGenerator.GetMap();
 
         if (map == null)
         {
             Debug.LogError("Failed to generate map.");
-            return;
+            return false;
         }
 
         SetMap(map);
-    }
-
-    public void SetMap(Map map)
-    {
-        if (map == null)
-            return;
-
-        CurrentMap = map;
-        CurrentNodeId = null;
-        _visitedNodeIds.Clear();
+        return true;
     }
 
     public bool CanVisit(int nodeId)
@@ -83,12 +98,35 @@ public class MapManager : MonoBehaviour
         return true;
     }
 
-    private void OnNodeClicked(int nodeId)
+    private void SetMap(Map map)
     {
-        if (!TryVisitNode(nodeId))
+        if (map == null)
+            return;
+
+        Clear();
+
+        CurrentMap = map;
+        _visitedNodeIds.Clear();
+    }
+
+    private void OnNodeClicked(MapNode mapNode)
+    {
+        if (mapNode == null || mapNode.Node == null)
+            return;
+
+        if (!TryVisitNode(mapNode.Node.Id))
         {
-            Debug.Log($"Cannot visit node: {nodeId}");
+            Debug.Log($"Cannot visit node: {mapNode.Node.Id}");
         }
+    }
+
+    public void DisplayMap()
+    {
+        if (_view == null || CurrentMap == null)
+            return;
+
+        _view.ShowMap(CurrentMap, _config);
+        _view.RefreshStates(CurrentMap, _visitedNodeIds, CanVisit);
     }
 
     private void RefreshView()
@@ -97,6 +135,21 @@ public class MapManager : MonoBehaviour
             return;
 
         _view.RefreshStates(CurrentMap, _visitedNodeIds, CanVisit);
+    }
+
+    public void ClearDisplayedMap()
+    {
+        if (_view != null)
+            _view.Clear();
+    }
+
+    public void Clear()
+    {
+        CurrentMap = null;
+        CurrentNodeId = null;
+        _visitedNodeIds.Clear();
+
+        ClearDisplayedMap();
     }
 
     private void OnDestroy()

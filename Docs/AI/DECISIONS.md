@@ -61,8 +61,9 @@ The initial context contained no confirmed gameplay ADRs. The decisions below we
 - **Date:** 2026-10-22.
 - **Status:** Accepted.
 - **Context:** 맵 생성 기본 틀 이후 MapView를 작성하고 Editor 확인을 준비 중이다.
-- **Decision:** 현재 생성·표시·입력 연결은 MapTestScene에서 담당한다.
-  테스트가 어느 정도 진행된 후 다른 곳으로 이전한다.
+- **Decision:** 초기 테스트의 생성·표시·입력 연결은 MapTestScene에서 담당하고,
+  테스트 진행 후 이전한다. 2026-10-28 개발자 구현으로 연결 책임을 MapManager로 이전했다.
+  MapTestScene은 시작·수동 테스트 호출과 시드 전달·씬 정리 위임을 담당한다.
 - **Rationale:** 개발자가 현재 테스트 단계의 연결 위치로 지정했다.
 - **Implementation — 2026-10-24 정적 확인:** MapTestScene.Start에 생성 → SetMap →
   ShowMap → 최초 RefreshStates가 구현되었다. OnEnable/OnDisable의 클릭 구독·해제,
@@ -75,7 +76,12 @@ The initial context contained no confirmed gameplay ADRs. The decisions below we
   MapTestScene에서 구분한다. 기존 Clear는 클릭 구독까지 해제하는 씬 정리 경로로 유지한다.
   개발자가 제안을 수용해 코드를 적용하고 재표시·새 맵 생성·비활성화/재활성화·
   정리 후 재표시 테스트에서 문제없음을 보고했다. AI 실행 검증은 아니다.
-- **Open details:** 이전 위치와 구체 시점은 미정이다.
+- **Implementation — 2026-10-28 정적 확인:** MapManager가 OnEnable/OnDisable에서
+  View 클릭 이벤트를 구독·해제하고 OnNodeClicked(MapNode)에서 방문 처리를 호출한다.
+  GenerateMap(int customSeed = 0)은 성공 여부를 반환하고, 테스트 씬은 _seed를 전달하여
+  성공 시 DisplayMap을 호출한다. ClearDisplayedMap은 표시만, Clear는 맵·진행·표시를 정리한다.
+  Clear 자체는 클릭 구독을 해제하지 않는다. 리뷰 후 수정된 소스를 확인했으며 실행 결과는 미보고다.
+- **Open details:** RunManager 통합 시 데이터 소유권과 씬 수명 경계.
 - **Affected files:** Assets/_Projects/Scripts/Map/Test/MapTestScene.cs,
   MapManager.cs 및 MapView.cs(동일 Map 디렉터리).
 
@@ -114,6 +120,12 @@ The initial context contained no confirmed gameplay ADRs. The decisions below we
 - **2026-10-26 구현 보완:** 현재 테스트 진입은 Start → GenerateNewMap이며 저장된 씬의
   _seed는 12312다. 같은 씬의 재표시는 SetMap을 생략하여 진행을 유지하지만,
   이 테스트 결과가 씬 전환 후 런 상태 보존까지 구현·검증했다는 의미는 아니다.
+- **Implementation — 2026-10-28 정적 확인:** 씬의 _seed는 40000이며
+  MapManager.GenerateMap(_seed)에 전달한다. customSeed > 0은 SystemRng(customSeed),
+  그 외는 RuntimeManager.Random을 사용한다. RuntimeManager 등록·RNG 준비 연결은 발견하지 못했으며,
+  미등록 시 .Random 접근 예외 위험이 남아 있다. RunManager의 IGameSystem 골격은 추가되었으나
+  생성·초기화 호출과 런 데이터 소유는 없다. MapTestScene.Clear는 MapManager.Clear를 호출해
+  진행까지 초기화하므로 씬 간 보존은 여전히 미구현이다.
 - **Conflict to address:** SceneManagerEX.LoadScene은 Managers.Clear를 호출하며
   RuntimeManager.Clear는 Seed와 Random을 지운다.
   향후 시스템을 단순 등록하기 전에 씬 정리와 런 종료의 경계를 정해야 한다.
@@ -135,6 +147,8 @@ The initial context contained no confirmed gameplay ADRs. The decisions below we
   공용 PoolManager는 있지만 MapView와 연결되어 있지 않다.
 - **2026-10-26 진행:** 기존 Instantiate/Destroy 방식으로 같은 맵 재표시와 정리 후 복구를
   구현하고 개발자 테스트 결과 문제없음을 확인했다. 풀링 자체는 아직 통합되지 않았다.
+- **2026-10-28 구현 확인:** MapManager.DisplayMap/ClearDisplayedMap으로 표시 조정을 이전했다.
+  MapView의 Instantiate/Destroy 방식은 유지된다. 이관 후 실행·풀링 검증은 미확인이다.
 - **Open details:** 전체 맵·노드·선 중 풀링 단위, 반환 시점,
   씬 간 표시 객체 수명 및 공용 풀 사용 방식은 미정이다.
 - **Consequences:** 표시 재사용과 런 데이터 보존을 분리해 검토한다.

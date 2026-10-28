@@ -2,10 +2,8 @@ using UnityEngine;
 using URDev.GameFramework;
 
 public class MapTestScene : BaseScene
-{
-    [SerializeField] private MapConfigSO _config;
+{    
     [SerializeField] private MapManager _mapManager;
-    [SerializeField] private MapView _mapView;
     [SerializeField] private int _seed = 12345;
 
     protected override void Init()
@@ -14,38 +12,16 @@ public class MapTestScene : BaseScene
         SceneName = "MapTestScene";
     }
 
-    private void OnEnable()
-    {
-        if (_mapView != null)
-            _mapView.OnNodeClicked += HandleNodeClicked;
-    }
-
-    private void OnDisable()
-    {
-        if (_mapView != null)
-            _mapView.OnNodeClicked -= HandleNodeClicked;
-    }
-
     public void Start()
     {
         GenerateNewMap();
     }
-
-    private void HandleNodeClicked(MapNode mapNode)
-    {
-        if (mapNode == null || mapNode.Node == null)
-            return;
-
-        _mapManager.TryVisitNode(mapNode.Node.Id);
-    }
-
     public override void Clear()
     {
-        if (_mapView == null)
+        if (_mapManager == null)
             return;
 
-        _mapView.OnNodeClicked -= HandleNodeClicked;
-        _mapView.Clear();
+        _mapManager.Clear();
     }
 
     [ContextMenu("Map Test/Generate New Map")]
@@ -54,21 +30,22 @@ public class MapTestScene : BaseScene
         if (!Application.isPlaying)
             return;
 
-        if (_config == null || _mapManager == null || _mapView == null)
+        if (_mapManager == null)
         {
             Debug.LogError("MapTestScene references are not assigned.", this);
             return;
         }
 
-        var generator = new MapGenerator(_config, new SystemRng(_seed));
-        Map map = generator.GetMap();
+        if (!_mapManager.GenerateMap(_seed))
+            return;
+
+        Map map = _mapManager.CurrentMap;
 
         // 생성에 실패하면 현재 맵과 진행은 유지합니다.
         if (map == null)
             return;
 
-        _mapManager.SetMap(map);
-        RedisplayCurrentMap();
+        _mapManager.DisplayMap();
     }
 
     // MapView 갱신 테스트
@@ -78,18 +55,14 @@ public class MapTestScene : BaseScene
         if (!Application.isPlaying)
             return;
 
-        if (_config == null || _mapManager == null || _mapView == null)
+        if (_mapManager == null)
             return;
 
         Map map = _mapManager.CurrentMap;
         if (map == null)
             return;
 
-        _mapView.ShowMap(map, _config);
-        _mapView.RefreshStates(
-            map,
-            _mapManager.VisitedNodeIds,
-            _mapManager.CanVisit);
+        _mapManager.DisplayMap();
     }
 
     // MapView 지우기 테스트
@@ -99,7 +72,7 @@ public class MapTestScene : BaseScene
         if (!Application.isPlaying)
             return;
 
-        if (_mapView != null)
-            _mapView.Clear();
+        if (_mapManager != null)
+            _mapManager.ClearDisplayedMap();
     }
 }

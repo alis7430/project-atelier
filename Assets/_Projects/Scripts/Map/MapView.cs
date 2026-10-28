@@ -110,13 +110,8 @@ public class MapView : MonoBehaviour
 
                 MapLine line = Instantiate(_linePrefab, _lineRoot);
 
-                Vector2 fromPos =
-                    ((RectTransform)from.transform)
-                    .anchoredPosition;
-
-                Vector2 toPos =
-                    ((RectTransform)to.transform)
-                    .anchoredPosition;
+                Vector2 fromPos = ((RectTransform)from.transform).anchoredPosition;
+                Vector2 toPos = ((RectTransform)to.transform).anchoredPosition;
 
                 line.SetData(node.Id, nextId, fromPos, toPos, _lineThickness);
 
@@ -139,9 +134,7 @@ public class MapView : MonoBehaviour
         
         if (!ReferenceEquals(_displayedMap, map))
         {
-            Debug.LogWarning(
-                "Call ShowMap before refreshing a different map.",
-                this);
+            Debug.LogWarning("Call ShowMap before refreshing a different map.", this);
 
             return;
         }

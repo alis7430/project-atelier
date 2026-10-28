@@ -37,7 +37,6 @@ public class MapNode : MonoBehaviour
         {
             _icon.sprite = NodeSO != null ? NodeSO.SpriteIcon : null;
         }
-
     }
 
     public void SetState(MapNodeStates newState, 
